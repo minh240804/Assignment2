@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Assignment2.BusinessLogic;
 
-namespace Presentation.Pages.Account
+namespace Presentation.Pages.AccountManagement
 {
     public class LoginModel : PageModel
     {
@@ -41,9 +41,9 @@ namespace Presentation.Pages.Account
             HttpContext.Session.SetInt32("Role", account.AccountRole.GetValueOrDefault());
             HttpContext.Session.SetString("Name", account.AccountName ?? "User");
             
-            if (account.AccountRole == 0) // admin
+            if (account.AccountRole == 0)
                 return RedirectToPage("Index");
-            return RedirectToPage("/NewsArticle/Index");
+            return RedirectToPage("/NewsArticleManagement/Index");
         }
 
         public IActionResult OnPostLogout()

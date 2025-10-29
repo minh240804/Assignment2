@@ -6,8 +6,9 @@ using System.Linq;
 using Microsoft.AspNetCore.SignalR;
 using Presentation.Hubs;
 
-namespace Presentation.Pages.Account
+namespace Presentation.Pages.AccountManagement
 {
+    [IgnoreAntiforgeryToken]
     public class FormModel : PageModel
     {
         private readonly IAccountService _acc;
@@ -68,7 +69,7 @@ namespace Presentation.Pages.Account
             {
                 var existing = _acc.Get(Account.AccountId);
                 if (existing == null) return NotFound();
-                Account.AccountEmail = existing.AccountEmail; // Ensure email doesn't change
+                Account.AccountEmail = existing.AccountEmail; 
             }
 
             Validate(IsCreate);
@@ -92,11 +93,9 @@ namespace Presentation.Pages.Account
                     var existing = _acc.Get(Account.AccountId);
                     if (existing == null) return NotFound();
 
-                    // Update only allowed fields
                     existing.AccountName = Account.AccountName;
                     existing.AccountRole = Account.AccountRole;
                     
-                    // If account is being deactivated
                     if (!Account.AccountStatus && existing.AccountStatus)
                     {
                         await _hubContext.Clients.All.SendAsync("AccountDeactivated", Account.AccountId.ToString());

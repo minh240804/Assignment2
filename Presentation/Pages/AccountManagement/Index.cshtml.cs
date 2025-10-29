@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 
-namespace Presentation.Pages.Account
+namespace Presentation.Pages.AccountManagement
 {
     public class IndexModel : PageModel
     {
@@ -17,8 +17,8 @@ namespace Presentation.Pages.Account
             _acc = acc;
         }
 
-        public List<SystemAccount> Accounts { get; set; }
-        
+        public List<SystemAccount> Accounts { get; set; } = new List<SystemAccount>();
+
         [BindProperty(SupportsGet = true)]
         public string Search { get; set; }
         

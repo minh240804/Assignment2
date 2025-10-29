@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Assignment2.BusinessLogic;
 using Assignment2.DataAccess.Models;
 
-namespace Presentation.Pages.Account
+namespace Presentation.Pages.AccountManagement
 {
     public class ProfileModel : PageModel
     {
