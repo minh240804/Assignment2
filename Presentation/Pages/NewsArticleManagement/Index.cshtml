@@ -4,16 +4,16 @@
     ViewData["Title"] = "News Articles";
 }
 
-<div class="container-fluid">
-    <h2 class="text-primary">News Articles</h2>
+@* <div class="container-fluid"> *@
+@*     <h2 class="text-primary">News Articles</h2> *@
 
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
+@*     @if (TempData["SuccessMessage"] != null) *@
+@*     { *@
+@*         <div class="alert alert-success alert-dismissible fade show" role="alert"> *@
+@*             @TempData["SuccessMessage"] *@
+@*             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> *@
+@*         </div> *@
+@*     } *@
 
     <div class="row">
         <div class="col-6">
@@ -71,20 +71,20 @@
     </table>
 </div>
 
-@section Scripts {
-    <script>
-        // Show form in modal popup
-        function showInPopup(url, title) {
-            $.ajax({
-                type: "GET",
-                url: url,
-                success: function (res) {
-                    $("#form-modal .modal-body").html(res);
-                    $("#form-modal .modal-title").html(title);
-                    $("#form-modal").modal('show');
-                }
-            });
-        }
+@* @section Scripts { *@
+@*     <script> *@
+@*         // Show form in modal popup *@
+@*         function showInPopup(url, title) { *@
+@*             $.ajax({ *@
+@*                 type: "GET", *@
+@*                 url: url, *@
+@*                 success: function (res) { *@
+@*                     $("#form-modal .modal-body").html(res); *@
+@*                     $("#form-modal .modal-title").html(title); *@
+@*                     $("#form-modal").modal('show'); *@
+@*                 } *@
+@*             }); *@
+@*         } *@
 
         // Close modal after successful form submission
         function closeModal() {
