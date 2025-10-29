@@ -48,5 +48,11 @@ namespace Presentation.Hubs
         {
             await Clients.All.SendAsync("UpdateDashboardCounts");
         }
+
+        public async Task ForceLogoutAccount(string accountId, string? reason = null)
+        {
+            await Clients.Group($"account_{accountId}")
+                .SendAsync("ForceLogout", new { reason = reason ?? "account_deleted" });
+        }
     }
 }

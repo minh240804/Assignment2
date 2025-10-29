@@ -13,12 +13,28 @@ connection.on("ReceiveNewAccountNotification", function (message) {
 });
 
 connection.on("AccountDeactivated", function (accountId) {
+    // Convert both to numbers for comparison since SignalR might send it as a string
+    const currentId = parseInt(window.currentAccountId);
+    const deactivatedId = parseInt(accountId);
+    
+    console.log("Received deactivation for account:", deactivatedId);
+    console.log("Current account:", currentId);
+
     // If this is the deactivated user, redirect to logout
-    if (window.currentAccountId === accountId) {
-        toastr.warning("Your account has been deactivated");
-        setTimeout(() => {
-            window.location.href = '/Account/Logout';
-        }, 2000);
+    if (currentId === deactivatedId) {
+        toastr.warning("Your account has been deactivated", null, {
+            timeOut: 0,
+            extendedTimeOut: 0,
+            closeButton: true,
+            tapToDismiss: false
+        });
+        
+        // Submit the logout form
+        const logoutForm = document.createElement('form');
+        logoutForm.method = 'post';
+        logoutForm.action = '/AccountManagement/Login?handler=Logout';
+        document.body.appendChild(logoutForm);
+        logoutForm.submit();
     }
 });
 

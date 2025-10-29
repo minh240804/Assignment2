@@ -5,16 +5,37 @@ using Assignment2.DataAccess.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using Microsoft.AspNetCore.SignalR;
+using Presentation.Hubs;
 
 namespace Presentation.Pages.AccountManagement
 {
     public class IndexModel : PageModel
     {
         private readonly IAccountService _acc;
+        private readonly IHubContext<NotificationHub> _hub;
 
-        public IndexModel(IAccountService acc)
+        public IndexModel(IAccountService acc, IHubContext<NotificationHub> hub)
         {
             _acc = acc;
+            _hub = hub;
+        }
+
+        public async Task<IActionResult> OnPostDelete(short id)
+        {
+            if (!IsAdmin()) return Unauthorized();
+
+            var account = _acc.Get(id);
+            if (account == null) return NotFound();
+
+            // Notify all clients (some might not be in the group yet)
+            await _hub.Clients.All.SendAsync("AccountDeactivated", id.ToString());
+            
+            // Delete the account
+            _acc.Delete(id);
+            
+            TempData["SuccessMessage"] = "Account deleted successfully.";
+            return RedirectToPage();
         }
 
         public List<SystemAccount> Accounts { get; set; } = new List<SystemAccount>();
@@ -43,8 +64,8 @@ namespace Presentation.Pages.AccountManagement
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 query = query.Where(x =>
-                    x.AccountName.Contains(Search, StringComparison.OrdinalIgnoreCase) ||
-                    x.AccountEmail.Contains(Search, StringComparison.OrdinalIgnoreCase));
+                    (x.AccountName ?? "").Contains(Search, StringComparison.OrdinalIgnoreCase) ||
+                    (x.AccountEmail ?? "").Contains(Search, StringComparison.OrdinalIgnoreCase));
             }
 
             if (RoleFilter.HasValue && RoleFilter > 0)
@@ -63,22 +84,27 @@ namespace Presentation.Pages.AccountManagement
             return Page();
         }
 
-        public IActionResult OnPostDelete(short id)
-        {
-            if (!IsAdmin()) return Unauthorized();
+        //public async Task<IActionResult> OnPostDelete(short id)
+        //{
+        //    if (!IsAdmin()) return Unauthorized();
 
-            var result = _acc.Delete(id);
-            
-            if (result.Success)
-            {
-                TempData["SuccessMessage"] = result.Message;
-            }
-            else
-            {
-                TempData["ErrorMessage"] = result.Message;
-            }
+        //    var result = _acc.Delete(id);
 
-            return RedirectToPage();
-        }
+        //    if (result.Success)
+        //    {
+        //        TempData["SuccessMessage"] = result.Message;
+
+        //        await _hub.Clients.Group($"account_{id}")
+        //            .SendAsync("ForceLogout", new { reason = "account_deleted" });
+
+        //        await _hub.Clients.All.SendAsync("AccountDeleted", id);
+        //    }
+        //    else
+        //    {
+        //        TempData["ErrorMessage"] = result.Message;
+        //    }
+
+        //    return RedirectToPage();
+        //}
     }
 }

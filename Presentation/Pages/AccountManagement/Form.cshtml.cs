@@ -127,7 +127,6 @@ namespace Presentation.Pages.AccountManagement
                 ModelState.AddModelError(nameof(Account.AccountEmail), "Email đã tồn tại.");
             }
 
-            // Name: required, max 100, regex ký tự cho phép
             if (string.IsNullOrWhiteSpace(Account.AccountName))
                 ModelState.AddModelError(nameof(Account.AccountName), "Name là bắt buộc.");
             else

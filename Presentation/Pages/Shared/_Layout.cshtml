@@ -89,10 +89,11 @@
     <script>
         // Set up global variables for SignalR
         window.userRole = @(role ?? -1);
-        window.currentAccountId = '@HttpContextAccessor.HttpContext?.Session.GetInt32("AccountId")';
+        window.currentAccountId = @(HttpContextAccessor.HttpContext?.Session.GetInt32("AccountId") ?? -1);
         
         // Initialize SignalR connection when logged in
-        if (window.currentAccountId) {
+        if (window.currentAccountId > 0) {
+            console.log("Initializing SignalR for account:", window.currentAccountId);
             startSignalRConnection(window.currentAccountId);
         }
     </script>

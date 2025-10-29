@@ -1,4 +1,4 @@
-@page
+﻿@page
 @model Presentation.Pages.NewsArticleManagement.IndexModel
 @{
     ViewData["Title"] = "News Articles";
@@ -93,4 +93,30 @@
             location.reload();
         }
     </script>
+
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+          .withUrl("/notificationHub")
+          .withAutomaticReconnect()
+          .build();
+
+        connection.on("ForceLogout", (payload) => {
+          // Xoá state cục bộ nếu có
+          // localStorage.clear();
+
+          // Điều hướng sang logout (huỷ cookie/session phía server)
+          const reason = payload?.reason || "force";
+          window.location.href = "/AccountManagement/Login/Logout";
+        });
+
+        connection.onreconnected(() => {
+          // Re-join group nếu cần
+          connection.invoke("RegisterConnection", window.currentAccountId?.toString());
+        });
+
+        connection.start()
+          .then(() => connection.invoke("RegisterConnection", window.currentAccountId?.toString()))
+          .catch(err => console.error(err));
+    </script>
+
 }
