@@ -72,7 +72,7 @@ namespace Assignment2
             app.UseAuthorization();
             
             app.UseSession();
-
+            
             app.MapRazorPages();
             app.MapHub<NotificationHub>("/notificationHub");
 

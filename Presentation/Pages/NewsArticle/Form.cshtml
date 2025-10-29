@@ -1,83 +1,83 @@
-@page "{id:int?}"
-@model Presentation.Pages.NewsArticle.FormModel
-@{
-    Layout = null;
-}
+@* @page "{id:int?}" *@
+@* @model Presentation.Pages.NewsArticle.FormModel *@
+@* @{ *@
+@*     Layout = null; *@
+@* } *@
 
-<div class="modal-header">
-    <h5 class="modal-title">@(Model.IsCreate ? "Create" : "Edit") News Article</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-</div>
+@* <div class="modal-header"> *@
+@*     <h5 class="modal-title">@(Model.IsCreate ? "Create" : "Edit") News Article</h5> *@
+@*     <button type="button" class="btn-close" data-bs-dismiss="modal"></button> *@
+@* </div> *@
 
-<form method="post" onsubmit="return submitForm(this);">
-    <div class="modal-body">
-        <input type="hidden" asp-for="Article.ArticleId" />
-        <input type="hidden" asp-for="Article.AuthorId" value="@Model.CurrentUserId" />
+@* <form method="post" onsubmit="return submitForm(this);"> *@
+@*     <div class="modal-body"> *@
+@*         <input type="hidden" asp-for="Article.ArticleId" /> *@
+@*         <input type="hidden" asp-for="Article.AuthorId" value="@Model.CurrentUserId" /> *@
 
-        <div class="mb-3">
-            <label asp-for="Article.ArticleTitle" class="form-label">Title</label>
-            <input asp-for="Article.ArticleTitle" class="form-control" />
-            <span asp-validation-for="Article.ArticleTitle" class="text-danger"></span>
-        </div>
+@*         <div class="mb-3"> *@
+@*             <label asp-for="Article.ArticleTitle" class="form-label">Title</label> *@
+@*             <input asp-for="Article.ArticleTitle" class="form-control" /> *@
+@*             <span asp-validation-for="Article.ArticleTitle" class="text-danger"></span> *@
+@*         </div> *@
 
-        <div class="mb-3">
-            <label asp-for="Article.ArticleContent" class="form-label">Content</label>
-            <textarea asp-for="Article.ArticleContent" class="form-control" rows="5"></textarea>
-            <span asp-validation-for="Article.ArticleContent" class="text-danger"></span>
-        </div>
+@*         <div class="mb-3"> *@
+@*             <label asp-for="Article.ArticleContent" class="form-label">Content</label> *@
+@*             <textarea asp-for="Article.ArticleContent" class="form-control" rows="5"></textarea> *@
+@*             <span asp-validation-for="Article.ArticleContent" class="text-danger"></span> *@
+@*         </div> *@
 
-        <div class="mb-3">
-            <label asp-for="Article.CategoryId" class="form-label">Category</label>
-            <select asp-for="Article.CategoryId" class="form-select" 
-                    asp-items="@(new SelectList(Model.Categories, "CategoryId", "CategoryName"))">
-                <option value="">-- Select Category --</option>
-            </select>
-            <span asp-validation-for="Article.CategoryId" class="text-danger"></span>
-        </div>
+@*         <div class="mb-3"> *@
+@*             <label asp-for="Article.CategoryId" class="form-label">Category</label> *@
+@*             <select asp-for="Article.CategoryId" class="form-select"  *@
+@*                     asp-items="@(new SelectList(Model.Categories, "CategoryId", "CategoryName"))"> *@
+@*                 <option value="">-- Select Category --</option> *@
+@*             </select> *@
+@*             <span asp-validation-for="Article.CategoryId" class="text-danger"></span> *@
+@*         </div> *@
 
-        <div class="mb-3">
-            <label asp-for="SelectedTags" class="form-label">Tags</label>
-            <select asp-for="SelectedTags" class="form-select" multiple
-                    asp-items="@(new MultiSelectList(Model.Tags, "TagId", "TagName"))">
-            </select>
-        </div>
+@*         <div class="mb-3"> *@
+@*             <label asp-for="SelectedTags" class="form-label">Tags</label> *@
+@*             <select asp-for="SelectedTags" class="form-select" multiple *@
+@*                     asp-items="@(new MultiSelectList(Model.Tags, "TagId", "TagName"))"> *@
+@*             </select> *@
+@*         </div> *@
 
-        @if (Model.IsAdmin)
-        {
-            <div class="mb-3">
-                <div class="form-check">
-                    <input asp-for="Article.ArticleStatus" class="form-check-input" />
-                    <label asp-for="Article.ArticleStatus" class="form-check-label">Published</label>
-                </div>
-            </div>
-        }
-    </div>
+@*         @if (Model.IsAdmin) *@
+@*         { *@
+@*             <div class="mb-3"> *@
+@*                 <div class="form-check"> *@
+@*                     <input asp-for="Article.ArticleStatus" class="form-check-input" /> *@
+@*                     <label asp-for="Article.ArticleStatus" class="form-check-label">Published</label> *@
+@*                 </div> *@
+@*             </div> *@
+@*         } *@
+@*     </div> *@
 
-    <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit" class="btn btn-primary">Save</button>
-    </div>
-</form>
+@*     <div class="modal-footer"> *@
+@*         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button> *@
+@*         <button type="submit" class="btn btn-primary">Save</button> *@
+@*     </div> *@
+@* </form> *@
 
-<script>
-    function submitForm(form) {
-        $.ajax({
-            type: "POST",
-            url: form.action,
-            data: $(form).serialize(),
-            success: function (result) {
-                if (result.success) {
-                    closeModal();
-                } else {
-                    // Handle validation errors
-                    var errorDiv = $("<div>").addClass("alert alert-danger");
-                    for (var error in result.errors) {
-                        errorDiv.append($("<p>").text(result.errors[error]));
-                    }
-                    $(form).find(".modal-body").prepend(errorDiv);
-                }
-            }
-        });
-        return false;
-    }
-</script>
+@* <script> *@
+@*     function submitForm(form) { *@
+@*         $.ajax({ *@
+@*             type: "POST", *@
+@*             url: form.action, *@
+@*             data: $(form).serialize(), *@
+@*             success: function (result) { *@
+@*                 if (result.success) { *@
+@*                     closeModal(); *@
+@*                 } else { *@
+@*                     // Handle validation errors *@
+@*                     var errorDiv = $("<div>").addClass("alert alert-danger"); *@
+@*                     for (var error in result.errors) { *@
+@*                         errorDiv.append($("<p>").text(result.errors[error])); *@
+@*                     } *@
+@*                     $(form).find(".modal-body").prepend(errorDiv); *@
+@*                 } *@
+@*             } *@
+@*         }); *@
+@*         return false; *@
+@*     } *@
+@* </script> *@
