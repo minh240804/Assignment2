@@ -18,6 +18,8 @@ namespace Presentation.Pages.CategoryManagement
         [BindProperty]
         public Category Category { get; set; }
 
+        public List<SelectListItem> ParentCategories { get; set; } = new List<SelectListItem>();
+
         public bool IsCreate { get; set; }
 
         [TempData]
@@ -41,13 +43,9 @@ namespace Presentation.Pages.CategoryManagement
         {
             if (!IsStaff) return Unauthorized();
 
-            IsCreate = !id.HasValue;
+            var allCat = _cats.GetAll(true).ToList();
 
-            if (IsCreate)
-            {
-                Category = new Category { IsActive = true };
-            }
-            else
+            if (id.HasValue)
             {
                 var existingCategory = _cats.Get(id.Value);
                 if (existingCategory == null) return NotFound();
@@ -55,61 +53,59 @@ namespace Presentation.Pages.CategoryManagement
                 {
                     CategoryId = existingCategory.CategoryId,
                     CategoryName = existingCategory.CategoryName,
+                    CategoryDesciption = existingCategory.CategoryDesciption,
                     ParentCategoryId = existingCategory.ParentCategoryId,
                     IsActive = existingCategory.IsActive
                 };
             }
 
+            ParentCategories = allCat
+                .Where(c => !id.HasValue || c.CategoryId != id.Value)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.CategoryId.ToString(),
+                    Text = c.CategoryName
+                })
+                .ToList();
+
             return Page();
         }
 
+        private void LoadLookups(short? parentId = null) =>
+            ViewData["ParentList"] = new SelectList(_cats.GetAll(true), "CategoryId", "CategoryName", parentId);
 
-        public async Task<IActionResult> OnPostAsync()
+        public IActionResult OnPost()
         {
+            Console.WriteLine("Post modal");
             if (!IsStaff) return Unauthorized();
 
-            IsCreate = Category.CategoryId == 0;
-
-            if (!IsCreate)
-            {
-                var existingCategory = _cats.Get(Category.CategoryId);
-                if (existingCategory == null) return NotFound();
-                Category.CategoryId = existingCategory.CategoryId;
-            }
-
             Validate(Category);
+
             if (!ModelState.IsValid)
             {
+                LoadLookups(Category.ParentCategoryId);
+
                 return Page();
             }
 
-            try
+            if (Category.CategoryId == 0)
             {
-                if (IsCreate)
+                _cats.Add(Category);
+            }
+            else
+            {
+                _cats.Update(Category);
+                SuccessMessage = "Category updated successfully.";
+                var result = _cats.Update(Category);
+                if (!result.Success)
                 {
-                    _cats.Add(Category);
-                    SuccessMessage = "Category created successfully.";
+                    ModelState.AddModelError(string.Empty, result.Message);
+                    LoadLookups(Category.ParentCategoryId);
+                    return Page();
                 }
-                else
-                {
-                    var existing = _cats.Get(Category.CategoryId);
-                    if (existing == null) return NotFound();
-                    Category.CategoryId = existing.CategoryId;
-                    _cats.Update(Category);
-                    SuccessMessage = "Category updated successfully.";
-                }
-                if (IsModal)
-                {
-                    return new JsonResult(new { success = true });
-                }
+            }
 
-                return RedirectToPage("Index");
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError(string.Empty, $"An error occurred: {ex.Message}");
-                return Page();
-            }
+            return RedirectToPage("Index"); ;
         }
     }
 }

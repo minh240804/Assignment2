@@ -18,5 +18,10 @@ namespace Presentation.Hubs
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, $"account_{accountId}");
         }
+
+        public async Task NotifyCreateCategory(string message)
+        {
+            await Clients.All.SendAsync("ReceiveCreateCategoryNotification", message);
+        }
     }
 }

@@ -17,6 +17,7 @@ namespace Presentation.Pages.CategoryManagement
         }
 
         public IEnumerable<Category> Categories { get; set; }
+
         public int CurrentPage { get; set; }
         public int TotalPages { get; set; }
         public string Search { get; set; }
@@ -32,12 +33,9 @@ namespace Presentation.Pages.CategoryManagement
         [TempData]
         public string ErrorMessage { get; set; }
 
-        // Helpers
         private int? Role => HttpContext.Session.GetInt32("Role");
         private bool IsStaff => Role == 1;
 
-        // Dùng ViewData (tương tự ViewBag) để truyền SelectList
-        // cho các partial view (form popup)
         private void LoadLookups(short? parentId = null) =>
             ViewData["ParentList"] = new SelectList(_cats.GetAll(true), "CategoryId", "CategoryName", parentId);
 
@@ -74,71 +72,10 @@ namespace Presentation.Pages.CategoryManagement
 
             return Page();
         }
-
-        // Handler cho GET popup (thay thế action CreatePopup)
-        public IActionResult OnGetCreatePopup()
-        {
-            Console.WriteLine("create");
-            if (!IsStaff) return Unauthorized();
-            LoadLookups();
-            // Trả về PartialView, giả sử file partial tên là _Form.cshtml
-            return Partial("Form", new Category { IsActive = true });
-        }
-
-        // Handler cho GET popup (thay thế action EditPopup)
-        public IActionResult OnGetEditPopup(short id)
-        {
-
-            Console.WriteLine("create");
-            if (!IsStaff) return Unauthorized();
-            var c = _cats.Get(id);
-            if (c == null) return NotFound();
-            LoadLookups(c.ParentCategoryId);
-            return Partial("Form", c);
-        }
-
-        public IActionResult OnPostCreate()
-        {
-            if (!IsStaff) return Unauthorized();
-            Validate(Category);
-
-            if (!ModelState.IsValid)
-            {
-                LoadLookups(Category.ParentCategoryId);
-                return Partial("_Form", Category);
-            }
-
-            _cats.Add(Category);
-            SuccessMessage = "Category created"; // Dùng TempData
-            return new JsonResult(new { success = true });
-        }
-
-        public IActionResult OnPostEdit()
-        {
-            if (!IsStaff) return Unauthorized();
-            Validate(Category);
-
-            if (!ModelState.IsValid)
-            {
-                LoadLookups(Category.ParentCategoryId);
-                return Partial("_Form", Category);
-            }
-
-            var result = _cats.Update(Category);
-
-            if (!result.Success)
-            {
-                ModelState.AddModelError(string.Empty, result.Message);
-                LoadLookups(Category.ParentCategoryId);
-                return Partial("_Form", Category);
-            }
-
-            SuccessMessage = result.Message; // Dùng TempData
-            return new JsonResult(new { success = true });
-        }
-
+        
         public IActionResult OnPostDelete(short id)
         {
+            //Console.WriteLine("delete in index");
             if (!IsStaff) return Unauthorized();
 
             try
@@ -158,7 +95,6 @@ namespace Presentation.Pages.CategoryManagement
                 ErrorMessage = "An error occurred while deleting the category.";
             }
 
-            // Redirect về OnGet của trang Index hiện tại
             return RedirectToPage();
         }
     }
