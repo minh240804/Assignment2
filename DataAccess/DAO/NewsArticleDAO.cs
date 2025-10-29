@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using VuQuangMinh_ass2_He180094.DataAccess.Models;
+using Assignment2.DataAccess.Models;
 
-namespace VuQuangMinh_ass2_He180094.DataAccess.DAO
+namespace Assignment2.DataAccess.DAO
 {
     public class NewsArticleDAO
     {

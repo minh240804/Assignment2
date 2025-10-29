@@ -1,4 +1,4 @@
-namespace VuQuangMinh_ass2_He180094.DataAccess.Models
+namespace Assignment2.DataAccess.Models
 {
     public class ErrorViewModel
     {

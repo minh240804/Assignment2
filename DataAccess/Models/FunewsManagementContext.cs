@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
-namespace VuQuangMinh_ass2_He180094.DataAccess.Models
+namespace Assignment2.DataAccess.Models
 {
 
     public partial class FunewsManagementContext : DbContext

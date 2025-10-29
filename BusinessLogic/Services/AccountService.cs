@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using VuQuangMinh_ass2_He180094.DataAccess.Models;
-using VuQuangMinh_ass2_He180094.DataAccess.Repositories;
+using Assignment2.DataAccess.Models;
+using Assignment2.DataAccess.Repositories;
 using Microsoft.Extensions.Options;
 
-namespace VuQuangMinh_ass2_He180094.BusinessLogic;
+namespace Assignment2.BusinessLogic;
 
 public class AccountService : IAccountService
 {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace VuQuangMinh_ass2_He180094.DataAccess.Models;
+namespace Assignment2.DataAccess.Models;
 
 public partial class SystemAccount
 {
@@ -14,6 +14,8 @@ public partial class SystemAccount
     public int? AccountRole { get; set; }
 
     public string? AccountPassword { get; set; }
+
+    public bool AccountStatus { get; set; } = true;
 
     public virtual ICollection<NewsArticle> NewsArticles { get; set; } = new List<NewsArticle>();
 }

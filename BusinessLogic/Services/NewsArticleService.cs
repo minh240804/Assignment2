@@ -1,11 +1,11 @@
-﻿using VuQuangMinh_ass2_He180094.DataAccess;
-using VuQuangMinh_ass2_He180094.DataAccess.Models;
-using VuQuangMinh_ass2_He180094.DataAccess.Repositories;
+﻿using Assignment2.DataAccess;
+using Assignment2.DataAccess.Models;
+using Assignment2.DataAccess.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace VuQuangMinh_ass2_He180094.BusinessLogic
+namespace Assignment2.BusinessLogic
 {
     public class NewsArticleService : INewsArticleService
     {

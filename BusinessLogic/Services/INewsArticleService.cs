@@ -1,8 +1,8 @@
-﻿using VuQuangMinh_ass2_He180094.DataAccess.Models;
+﻿using Assignment2.DataAccess.Models;
 using System;
 using System.Collections.Generic;
 
-namespace VuQuangMinh_ass2_He180094.BusinessLogic
+namespace Assignment2.BusinessLogic
 {
     public interface INewsArticleService
     {
