@@ -1,5 +1,5 @@
 @page
-@model Presentation.Pages.Account.IndexModel
+@model Presentation.Pages.AccountManagement.IndexModel
 
 <h1>Account Management</h1>
 
@@ -109,13 +109,13 @@
 @section Scripts {
     <script>
         function showCreateForm() {
-            $('#formModal .modal-content').load('/Account/Form', function() {
+            $('#formModal .modal-content').load('/AccountManagement/Form', function() {
                 $('#formModal').modal('show');
             });
         }
 
         function showEditForm(id) {
-            $('#formModal .modal-content').load('/Account/Form/' + id, function() {
+            $('#formModal .modal-content').load('/AccountManagement/Form/' + id, function() {
                 $('#formModal').modal('show');
             });
         }

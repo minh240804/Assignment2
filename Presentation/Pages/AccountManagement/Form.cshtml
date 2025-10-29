@@ -1,5 +1,5 @@
 @page "{id:int?}"
-@model Presentation.Pages.Account.FormModel
+@model Presentation.Pages.AccountManagement.FormModel
 @{
     Layout = null;
 }
@@ -9,7 +9,8 @@
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
 
-<form method="post">
+<form method="post" asp-page="/AccountManagement/Form">
+    @Html.AntiForgeryToken()
     <div class="modal-body">
         @if (!Model.IsCreate)
         {
@@ -26,7 +27,7 @@
             <label asp-for="Account.AccountEmail">Email</label>
             @if (Model.IsCreate)
             {
-                <input asp-for="Account.AccountEmail" type="email" class="form-control" />
+                <input asp-for="Account.AccountEmail" type="email" class="form-control" required />
             }
             else
             {
