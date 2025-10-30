@@ -3,17 +3,21 @@ using Assignment2.DataAccess.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Presentation.Hubs;
 
 namespace Presentation.Pages.CategoryManagement
 {
     public class FormModel : PageModel
     {
         private readonly ICategoryService _cats;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public FormModel(ICategoryService cats)
+        public FormModel(ICategoryService cats, IHubContext<NotificationHub> hubContext)
         {
             _cats = cats;
+            _hubContext = hubContext;
         }
         [BindProperty]
         public Category Category { get; set; }
@@ -91,6 +95,9 @@ namespace Presentation.Pages.CategoryManagement
             if (Category.CategoryId == 0)
             {
                 _cats.Add(Category);
+                SuccessMessage = "Category created successfully.";
+                _hubContext.Clients.All.SendAsync("ReceiveCreateCategoryNotification",
+                    $"A new category has been created: {Category.CategoryName}");
             }
             else
             {
@@ -103,6 +110,8 @@ namespace Presentation.Pages.CategoryManagement
                     LoadLookups(Category.ParentCategoryId);
                     return Page();
                 }
+                _hubContext.Clients.All.SendAsync("ReceiveCreateCategoryNotification",
+                    $"A category has been updated: {Category.CategoryName}");
             }
 
             return RedirectToPage("Index"); ;

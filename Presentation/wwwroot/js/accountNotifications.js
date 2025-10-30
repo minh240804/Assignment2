@@ -22,6 +22,12 @@ connection.on("AccountDeactivated", function (accountId) {
     }
 });
 
+connection.on("ReceiveCreateCategoryNotification", function (message) {
+    // show to all users
+    console.log(message);
+    toastr.info(message);
+});
+
 // Function to start the connection and register the current user's connection
 async function startSignalRConnection(accountId) {
     try {
