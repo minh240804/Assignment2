@@ -39,7 +39,11 @@ namespace Assignment2.BusinessLogic
                 return (false, $"Cannot update category. This category has {articleCount} article(s) associated with it. Please reassign or remove the articles first.");
             }
 
-            _repo.Update(cat);
+            existing.CategoryName = cat.CategoryName;
+            existing.CategoryDesciption = cat.CategoryDesciption;
+            existing.ParentCategoryId = cat.ParentCategoryId;
+
+            _repo.Update(existing);
             return (true, "Category updated successfully.");
         }
 

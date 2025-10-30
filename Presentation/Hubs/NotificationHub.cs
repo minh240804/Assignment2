@@ -54,6 +54,9 @@ namespace Presentation.Hubs
         {
             await Clients.Group($"account_{accountId}")
                 .SendAsync("ForceLogout", new { reason = reason ?? "account_deleted" });
+        public async Task NotifyCreateCategory(string message)
+        {
+            await Clients.All.SendAsync("ReceiveCreateCategoryNotification", message);
         }
 
         private static string BuildArticleUpdatedMsg(NewsArticle art, string updaterName)
