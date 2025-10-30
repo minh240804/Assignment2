@@ -61,12 +61,14 @@
                     </section>
 
                     <!-- Source -->
-                    @if (!string.IsNullOrEmpty(Model.Article.NewsSource))
+                    @if (!string.IsNullOrEmpty(Model.Article.NewsSource) && 
+                         Model.Article.NewsSource != "N/A" &&
+                         (Model.Article.NewsSource.StartsWith("http://") || Model.Article.NewsSource.StartsWith("https://")))
                     {
                         <div class="mb-4">
                             <small class="text-muted">
                                 <i class="bi bi-link-45deg"></i> Source: 
-                                <a href="@Model.Article.NewsSource" target="_blank">@Model.Article.NewsSource</a>
+                                <a href="@Model.Article.NewsSource" target="_blank" rel="noopener noreferrer">@Model.Article.NewsSource</a>
                             </small>
                         </div>
                     }
