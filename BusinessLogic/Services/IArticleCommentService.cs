@@ -8,6 +8,6 @@ namespace Assignment2.BusinessLogic
         IEnumerable<Comment> GetByArticle(string articleId);
         Comment? Get(int id);
         void Add(string articleId, short accountId, string commentText);
-        void Delete(int id, short deletedBy);
+        void Delete(int id, short? deletedBy);
     }
 }

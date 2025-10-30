@@ -8,6 +8,6 @@ namespace Assignment2.DataAccess.Repositories
         IEnumerable<Comment> GetByArticle(string articleId);
         Comment? Get(int id);
         void Add(Comment comment);
-        void Delete(int id, short deletedBy);
+        void Delete(int id, short? deletedBy);
     }
 }

@@ -7,6 +7,7 @@ using Presentation.Hubs;
 
 namespace Presentation.Pages.NewsArticle
 {
+    [IgnoreAntiforgeryToken]
     public class DetailsModel : PageModel
     {
         private readonly INewsArticleService _newsArticleService;
@@ -152,6 +153,8 @@ namespace Presentation.Pages.NewsArticle
 
                 var authorId = comment.AccountId;
                 var adminName = _httpContextAccessor.HttpContext?.Session.GetString("Name") ?? "Admin";
+
+                Console.WriteLine($"Admin attempting delete - AccountID: {accountId.Value}, Name: {adminName}");
 
                 // Delete comment (soft delete)
                 _commentService.Delete(commentId, (short)accountId.Value);

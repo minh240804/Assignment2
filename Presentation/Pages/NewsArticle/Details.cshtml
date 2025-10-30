@@ -370,7 +370,10 @@
                 async function deleteComment(id) {
                     try {
                         const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-                        const res = await fetch('?handler=DeleteComment', {
+                        
+                        console.log('🗑️ Deleting comment:', id);
+                        
+                        const res = await fetch(`?handler=DeleteComment`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -378,22 +381,30 @@
                             },
                             body: new URLSearchParams({
                                 commentId: id,
-                                articleId,
+                                articleId: articleId,
                                 __RequestVerificationToken: token
                             })
                         });
 
-                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        console.log('Response status:', res.status);
+
+                        if (!res.ok) {
+                            const errorText = await res.text();
+                            console.error('Response error:', errorText);
+                            throw new Error(`HTTP ${res.status}`);
+                        }
 
                         const result = await res.json();
+                        console.log('Delete result:', result);
+                        
                         if (result.success) {
-                            showAlert('Deleted', 'success');
+                            showAlert('Comment deleted successfully', 'success');
                         } else {
-                            showAlert(result.error || 'Failed', 'error');
+                            showAlert(result.error || 'Failed to delete', 'error');
                         }
                     } catch (err) {
-                        console.error('Delete error:', err);
-                        showAlert('Failed: ' + err.message, 'error');
+                        console.error('❌ Delete error:', err);
+                        showAlert('Failed to delete: ' + err.message, 'error');
                     }
                 }
 

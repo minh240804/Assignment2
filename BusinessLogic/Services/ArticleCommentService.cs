@@ -33,7 +33,7 @@ namespace Assignment2.BusinessLogic
             _repo.Add(comment);
         }
 
-        public void Delete(int id, short deletedBy)
+        public void Delete(int id, short? deletedBy)
         {
             _repo.Delete(id, deletedBy);
         }

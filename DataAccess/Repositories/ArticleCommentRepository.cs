@@ -23,9 +23,9 @@ namespace Assignment2.DataAccess.Repositories
             _dao.Add(comment);
         }
 
-        public void Delete(int id, short deletedBy)
+        public void Delete(int id, short? deletedBy)
         {
-            var comment = _dao.GetById(id);
+            var comment = _dao.GetByIdForDelete(id);
             if (comment != null)
             {
                 _dao.Delete(comment, deletedBy);
