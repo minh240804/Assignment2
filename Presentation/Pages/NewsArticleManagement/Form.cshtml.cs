@@ -30,7 +30,7 @@ namespace Presentation.Pages.NewsArticleManagement
         }
 
         [BindProperty]
-        public NewsArticle Article { get; set; } = default!;
+        public Assignment2.DataAccess.Models.NewsArticle Article { get; set; } = default!;
 
         [BindProperty]
         public int[] SelectedTags { get; set; } = Array.Empty<int>();
@@ -59,7 +59,7 @@ namespace Presentation.Pages.NewsArticleManagement
             }
             else
             {
-                Article = new NewsArticle
+                Article = new Assignment2.DataAccess.Models.NewsArticle
                 {
                     CreatedById = (short)CurrentUserId,
                     NewsStatus = false 

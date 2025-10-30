@@ -1,0 +1,506 @@
+﻿@page "{id}"
+@model Presentation.Pages.NewsArticle.DetailsModel
+@{
+    ViewData["Title"] = Model.Article?.NewsTitle ?? "Article Details";
+}
+
+<div class="container mt-4">
+    @if (Model.Article == null)
+    {
+        <div class="alert alert-warning">Article not found.</div>
+    }
+    else
+    {
+        <article class="mb-4">
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Article Header -->
+                    <header class="mb-4">
+                        <h1 class="fw-bolder mb-1">@Model.Article.NewsTitle</h1>
+                        
+                        <div class="text-muted fst-italic mb-2">
+                            <i class="bi bi-calendar"></i> Posted on @Model.Article.CreatedDate?.ToString("MMMM dd, yyyy")
+                            @if (Model.Article.CreatedBy != null)
+                            {
+                                <span class="ms-3">
+                                    <i class="bi bi-person"></i> By @Model.Article.CreatedBy.AccountName
+                                </span>
+                            }
+                        </div>
+                        
+                        <!-- Categories and Tags -->
+                        <div class="mb-3">
+                            @if (Model.Article.Category != null)
+                            {
+                                <span class="badge bg-primary me-1">
+                                    <i class="bi bi-folder"></i> @Model.Article.Category.CategoryName
+                                </span>
+                            }
+                            @foreach (var tag in Model.Article.Tags)
+                            {
+                                <span class="badge bg-secondary me-1">
+                                    <i class="bi bi-tag"></i> @tag.TagName
+                                </span>
+                            }
+                        </div>
+                    </header>
+
+                    <!-- Headline -->
+                    @if (!string.IsNullOrEmpty(Model.Article.Headline))
+                    {
+                        <div class="alert alert-info">
+                            <h5 class="mb-0">@Model.Article.Headline</h5>
+                        </div>
+                    }
+
+                    <!-- Article Content -->
+                    <section class="mb-5">
+                        <div class="article-content">
+                            @Html.Raw(Model.Article.NewsContent?.Replace("\n", "<br />"))
+                        </div>
+                    </section>
+
+                    <!-- Source -->
+                    @if (!string.IsNullOrEmpty(Model.Article.NewsSource))
+                    {
+                        <div class="mb-4">
+                            <small class="text-muted">
+                                <i class="bi bi-link-45deg"></i> Source: 
+                                <a href="@Model.Article.NewsSource" target="_blank">@Model.Article.NewsSource</a>
+                            </small>
+                        </div>
+                    }
+
+                    <!-- Modified Date -->
+                    @if (Model.Article.ModifiedDate != null && Model.Article.ModifiedDate != Model.Article.CreatedDate)
+                    {
+                        <div class="mb-4">
+                            <small class="text-muted">
+                                <i class="bi bi-clock-history"></i> Last updated on @Model.Article.ModifiedDate?.ToString("MMMM dd, yyyy")
+                                @if (Model.Article.UpdatedBy != null)
+                                {
+                                    <span> by @Model.Article.UpdatedBy.AccountName</span>
+                                }
+                            </small>
+                        </div>
+                    }
+
+                    <!-- Back Button -->
+                    <div class="mb-4">
+                        <a asp-page="/Index" class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-left"></i> Back to Articles
+                        </a>
+                    </div>
+
+                    <!-- Comments Section -->
+                    <section class="mb-5">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h5 class="card-title mb-3">
+                                    <i class="bi bi-chat-dots"></i> Comments
+                                </h5>
+                                
+                                @if (Model.IsLoggedIn && !Model.IsAdmin)
+                                {
+                                    <!-- Comment Form for Staff and Lecturer only -->
+                                    <div class="mb-3">
+                                        <div class="alert alert-success mb-2">
+                                            <i class="bi bi-person-check"></i> Commenting as <strong>@Model.CurrentUserName</strong>
+                                        </div>
+                                        <form id="commentForm">
+                                            @Html.AntiForgeryToken()
+                                            <div class="input-group">
+                                                <input type="text" id="commentMessage" name="message" class="form-control" 
+                                                       placeholder="Write a comment..." required />
+                                                <button class="btn btn-primary" type="submit" id="sendCommentBtn">
+                                                    <i class="bi bi-send"></i> Send
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                }
+                                else if (Model.IsAdmin)
+                                {
+                                    <!-- Admin Notice -->
+                                    <div class="alert alert-info mb-3">
+                                        <i class="bi bi-shield-check"></i> 
+                                        <strong>Admin Viewing Mode</strong>
+                                        <p class="mb-0 mt-2">
+                                            You can moderate comments but cannot post new ones.
+                                        </p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <!-- Login Prompt -->
+                                    <div class="alert alert-warning mb-3">
+                                        <i class="bi bi-lock"></i> 
+                                        <strong>Please log in to comment</strong>
+                                        <p class="mb-0 mt-2">
+                                            You must be logged in to post comments. 
+                                            <a asp-page="/AccountManagement/Login" class="alert-link">
+                                                Click here to log in
+                                            </a>
+                                        </p>
+                                    </div>
+                                }
+
+                                <!-- Comments List -->
+                                <hr class="my-3" />
+                                <div id="commentsList">
+                                    @if (Model.Comments.Any())
+                                    {
+                                        @foreach (var comment in Model.Comments)
+                                        {
+                                            <div class="mb-3 p-3 bg-white rounded shadow-sm" id="comment-@comment.CommentId">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <strong class="text-primary">
+                                                        <i class="bi bi-person-circle"></i> @comment.Account.AccountName
+                                                    </strong>
+                                                    <div>
+                                                        <small class="text-muted me-2">
+                                                            <i class="bi bi-clock"></i> @comment.CreatedAt.ToString("HH:mm:ss dd/MM/yyyy")
+                                                        </small>
+                                                        @if (Model.IsAdmin)
+                                                        {
+                                                            <button class="btn btn-sm btn-outline-danger delete-comment-btn" 
+                                                                    data-comment-id="@comment.CommentId"
+                                                                    title="Delete inappropriate comment">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="comment-text">@comment.Content</div>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="text-muted text-center py-3">
+                                            <i class="bi bi-chat-square-text"></i> 
+                                            <p class="mb-0">No comments yet. Be the first to comment!</p>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-bookmark"></i> Related Articles
+                            </h5>
+                        </div>
+                        <div class="list-group list-group-flush">
+                            @if (Model.RelatedArticles.Any())
+                            {
+                                @foreach (var related in Model.RelatedArticles)
+                                {
+                                    <a asp-page="/NewsArticle/Details" asp-route-id="@related.NewsArticleId" 
+                                       class="list-group-item list-group-item-action">
+                                        <h6 class="mb-1">@related.NewsTitle</h6>
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar"></i> @related.CreatedDate?.ToString("MMM dd, yyyy")
+                                        </small>
+                                    </a>
+                                }
+                            }
+                            else
+                            {
+                                <div class="list-group-item text-muted">
+                                    No related articles found.
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-info-circle"></i> About
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">
+                                This article was published by our news team. 
+                                For more information, please contact us.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        (function() {
+            'use strict';
+            
+            const articleId = '@Model.Article?.NewsArticleId';
+            const currentUser = '@Model.CurrentUserName';
+            const isLoggedIn = @Model.IsLoggedIn.ToString().ToLower();
+            const isAdmin = @Model.IsAdmin.ToString().ToLower();
+
+            console.log('%c=== Comment System Started ===', 'background: blue; color: white; padding: 5px;');
+            console.log('Article:', articleId, '| User:', currentUser, '| Logged In:', isLoggedIn, '| Admin:', isAdmin);
+
+            if (typeof signalR === 'undefined') {
+                console.error('SignalR not loaded');
+                return;
+            }
+
+            async function getConnection() {
+                for (let i = 0; i < 30; i++) {
+                    if (window.sharedSignalRConnection) {
+                        console.log('Connection found');
+                        return window.sharedSignalRConnection;
+                    }
+                    await new Promise(r => setTimeout(r, 500));
+                }
+                console.error('Connection timeout');
+                return null;
+            }
+
+            (async function() {
+                const conn = await getConnection();
+                if (!conn) return;
+
+                console.log('Connection state:', conn.state);
+
+                conn.on("ReceiveComment", (data) => {
+                    console.log('New comment from:', data.user);
+                    addComment(data.user, data.message, data.timestamp);
+                });
+
+                conn.on("CommentDeleted", (data) => {
+                    showAlert(data.reason, 'warning');
+                    removeComment(data.commentId);
+                });
+
+                conn.on("CommentRemovedFromArticle", (data) => {
+                    removeComment(data.commentId);
+                });
+
+                if (isLoggedIn && !isAdmin) {
+                    const form = document.getElementById('commentForm');
+                    const input = document.getElementById('commentMessage');
+                    
+                    if (form) {
+                        form.addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            await postComment();
+                        });
+                    }
+                    
+                    if (input) {
+                        input.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                form?.dispatchEvent(new Event('submit'));
+                            }
+                        });
+                    }
+                }
+
+                if (isAdmin) {
+                    document.addEventListener('click', async (e) => {
+                        const btn = e.target.closest('.delete-comment-btn');
+                        if (btn && confirm('Delete this comment?')) {
+                            await deleteComment(btn.dataset.commentId);
+                        }
+                    });
+                }
+
+                async function postComment() {
+                    const input = document.getElementById('commentMessage');
+                    const btn = document.getElementById('sendCommentBtn');
+                    const msg = input?.value.trim();
+
+                    if (!msg) {
+                        showAlert('Please enter a comment', 'warning');
+                        return;
+                    }
+
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
+                    }
+
+                    try {
+                        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                        const res = await fetch('?handler=SendComment', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'RequestVerificationToken': token
+                            },
+                            body: new URLSearchParams({
+                                articleId,
+                                message: msg,
+                                __RequestVerificationToken: token
+                            })
+                        });
+
+                        const result = await res.json();
+                        
+                        if (result.success) {
+                            input.value = '';
+                            showAlert('Comment posted!', 'success');
+                        } else {
+                            showAlert(result.error || 'Failed', 'error');
+                        }
+                    } catch (err) {
+                        console.error('Post error:', err);
+                        showAlert('Failed to post', 'error');
+                    } finally {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="bi bi-send"></i> Send';
+                        }
+                    }
+                }
+
+                async function deleteComment(id) {
+                    try {
+                        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                        const res = await fetch('?handler=DeleteComment', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'RequestVerificationToken': token
+                            },
+                            body: new URLSearchParams({
+                                commentId: id,
+                                articleId,
+                                __RequestVerificationToken: token
+                            })
+                        });
+
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                        const result = await res.json();
+                        if (result.success) {
+                            showAlert('Deleted', 'success');
+                        } else {
+                            showAlert(result.error || 'Failed', 'error');
+                        }
+                    } catch (err) {
+                        console.error('Delete error:', err);
+                        showAlert('Failed: ' + err.message, 'error');
+                    }
+                }
+
+                function addComment(user, msg, time) {
+                    const list = document.getElementById('commentsList');
+                    const placeholder = list?.querySelector('.text-muted.text-center');
+                    if (placeholder) placeholder.remove();
+
+                    const div = document.createElement('div');
+                    div.className = 'mb-3 p-3 bg-white rounded shadow-sm';
+                    div.id = `comment-temp-${Date.now()}`;
+                    
+                    const delBtn = isAdmin ? `
+                        <button class="btn btn-sm btn-outline-danger delete-comment-btn ms-2" 
+                                data-comment-id="${div.id}">
+                            <i class="bi bi-trash"></i>
+                        </button>` : '';
+                    
+                    div.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <strong class="text-primary">
+                                <i class="bi bi-person-circle"></i> ${esc(user)}
+                            </strong>
+                            <div>
+                                <small class="text-muted me-2">
+                                    <i class="bi bi-clock"></i> ${esc(time)}
+                                </small>
+                                ${delBtn}
+                            </div>
+                        </div>
+                        <div class="comment-text">${esc(msg)}</div>
+                    `;
+                    
+                    list?.prepend(div);
+                    div.style.opacity = '0';
+                    setTimeout(() => {
+                        div.style.transition = 'opacity 0.3s';
+                        div.style.opacity = '1';
+                    }, 10);
+                }
+
+                function removeComment(id) {
+                    const elem = document.getElementById(`comment-${id}`);
+                    if (elem) {
+                        elem.style.transition = 'opacity 0.3s';
+                        elem.style.opacity = '0';
+                        setTimeout(() => elem.remove(), 300);
+                    }
+                }
+
+                function esc(text) {
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+
+                function showAlert(msg, type = 'info') {
+                    if (typeof toastr !== 'undefined' && toastr[type]) {
+                        toastr[type](msg);
+                    } else {
+                        const colors = { success: 'success', error: 'danger', warning: 'warning', info: 'info' };
+                        const a = document.createElement('div');
+                        a.className = `alert alert-${colors[type] || 'info'} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+                        a.style.zIndex = '9999';
+                        a.style.minWidth = '300px';
+                        a.innerHTML = `${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+                        document.body.appendChild(a);
+                        setTimeout(() => a.remove(), 5000);
+                    }
+                }
+
+                async function joinGroup() {
+                    try {
+                        // Wait for connection to be ready
+                        if (conn.state !== signalR.HubConnectionState.Connected) {
+                            console.log('Waiting for connection... Current state:', conn.state);
+                            
+                            // Wait up to 10 seconds for connection
+                            for (let i = 0; i < 20; i++) {
+                                if (conn.state === signalR.HubConnectionState.Connected) {
+                                    break;
+                                }
+                                await new Promise(r => setTimeout(r, 500));
+                            }
+                        }
+                        
+                        if (conn.state === signalR.HubConnectionState.Connected) {
+                            await conn.invoke("JoinArticleGroup", articleId);
+                            console.log('%c✓ Joined article group: ' + articleId, 'color: green; font-weight: bold;');
+                        } else {
+                            console.error('❌ Connection not ready. State:', conn.state);
+                            showAlert('Live comments unavailable', 'warning');
+                        }
+                    } catch (err) {
+                        console.error('❌ Join error:', err);
+                        showAlert('Could not join live comments', 'warning');
+                    }
+                }
+
+                window.addEventListener('beforeunload', () => {
+                    if (conn.state === signalR.HubConnectionState.Connected) {
+                        conn.invoke("LeaveArticleGroup", articleId).catch(console.error);
+                    }
+                });
+
+                await joinGroup();
+            })();
+        })();
+    </script>
+}

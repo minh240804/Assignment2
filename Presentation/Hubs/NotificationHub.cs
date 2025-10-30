@@ -29,6 +29,16 @@ namespace Presentation.Hubs
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"article_{articleId}");
         }
 
+        public async Task SendComment(string articleId, string user, string message, DateTime timestamp)
+        {
+            await Clients.Group($"article_{articleId}").SendAsync("ReceiveComment", new
+            {
+                user = user,
+                message = message,
+                timestamp = timestamp.ToString("HH:mm:ss dd/MM/yyyy")
+            });
+        }
+
         public async Task NotifyArticleUpdate(string articleId, string title, string content)
         {
             await Clients.Group($"article_{articleId}").SendAsync("ArticleUpdated", articleId, title, content);

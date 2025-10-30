@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Assignment2</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Assignment2.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
@@ -95,10 +96,19 @@
         window.userRole = @(role ?? -1);
         window.currentAccountId = @(HttpContextAccessor.HttpContext?.Session.GetInt32("AccountId") ?? -1);
         
-        // Initialize SignalR connection when logged in
+        // Always initialize SignalR connection (for all users including guests)
+        console.log("%c=== Starting SignalR Connection ===", "background: purple; color: white; padding: 5px;");
+        console.log("User Role:", window.userRole);
+        console.log("Account ID:", window.currentAccountId);
+        
+        // Start connection for everyone (guests and logged-in users)
         if (window.currentAccountId > 0) {
-            console.log("Initializing SignalR for account:", window.currentAccountId);
+            console.log("→ Starting SignalR for logged-in user:", window.currentAccountId);
             startSignalRConnection(window.currentAccountId);
+        } else {
+            console.log("→ Starting SignalR for guest user");
+            // Start connection for guests too (they can view comments in real-time)
+            startSignalRConnection(null);
         }
     </script>
 
