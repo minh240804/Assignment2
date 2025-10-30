@@ -109,12 +109,7 @@ namespace Presentation.Pages.NewsArticleManagement
 
             try
             {
-                // Thông báo SignalR trước khi xoá
-                await _hubContext.Clients.All
-                    .SendAsync("ArticleDeleted", id, article.NewsTitle);
-
-                await _hubContext.Clients.All.SendAsync("UpdateDashboardCounts");
-
+                // Delete the article
                 _newsArticleService.Delete(id);
                 
                 // Notify dashboard about the deletion (only one notification)

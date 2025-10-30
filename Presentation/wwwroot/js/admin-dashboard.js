@@ -250,7 +250,8 @@
         const iconMap = {
             create: 'bi-plus-circle text-success',
             update: 'bi-pencil text-info',
-            delete: 'bi-trash text-danger'
+            delete: 'bi-trash text-danger',
+            publish: 'bi-check-circle text-success'
         };
 
         const icon = iconMap[eventType] || 'bi-info-circle';
