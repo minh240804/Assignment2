@@ -48,10 +48,10 @@ namespace Presentation.Pages.NewsArticleManagement
             var articleToDelete = _newsArticleService.Get(id);
             if (articleToDelete != null)
             {
-                // Notify about article deletion
-                await _hubContext.Clients.All.SendAsync("ArticleDeleted", id, articleToDelete.NewsTitle);
+                // Delete the article
+                _newsArticleService.Delete(id);
                 
-                // Notify dashboard about the deletion
+                // Notify dashboard about the deletion (only one notification)
                 await _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
                 {
                     eventType = "delete",
@@ -60,7 +60,6 @@ namespace Presentation.Pages.NewsArticleManagement
                     timestamp = DateTime.Now
                 });
                 
-                _newsArticleService.Delete(id);
                 TempData["SuccessMessage"] = "Article deleted successfully.";
             }
             return RedirectToPage();
