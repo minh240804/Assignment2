@@ -107,7 +107,10 @@ namespace Presentation.Pages.CategoryManagement
             {
                 _cats.Add(Category);
                 SuccessMessage = "Category created successfully.";
-                _hubContext.Clients.All.SendAsync("ReceiveCreateCategoryNotification",
+                //_hubContext.Clients.All.SendAsync("ReceiveCreateCategoryNotification",
+                //    $"A new category has been created: {Category.CategoryName}");
+                _hubContext.Clients.All.SendAsync("ReloadCategoryList");
+                _hubContext.Clients.Group("Staff").SendAsync("ReceiveCreateCategoryNotification",
                     $"A new category has been created: {Category.CategoryName}");
                 
                 // Notify dashboard
@@ -130,10 +133,11 @@ namespace Presentation.Pages.CategoryManagement
                     LoadLookups(Category.ParentCategoryId);
                     return Page();
                 }
-                _hubContext.Clients.All.SendAsync("ReceiveCreateCategoryNotification",
-                    $"A category has been updated: {Category.CategoryName}");
+                //_hubContext.Clients.All.SendAsync("ReceiveCreateCategoryNotification",
+                //    $"A category has been updated: {Category.CategoryName}");
                 _hubContext.Clients.All.SendAsync("ReloadCategoryList");
-                
+                _hubContext.Clients.Group("Staff").SendAsync("ReceiveCreateCategoryNotification",
+                    $"A new category has been created: {Category.CategoryName}");
                 // Notify dashboard
                 _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
                 {

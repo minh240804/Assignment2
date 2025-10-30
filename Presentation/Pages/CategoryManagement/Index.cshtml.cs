@@ -41,7 +41,7 @@ namespace Presentation.Pages.CategoryManagement
         private bool IsStaff => Role == 1;
 
         // Handler cho HTTP GET (thay thế action Index)
-        public IActionResult OnGet(string? search, bool? active, int page = 1, int size = 5)
+        public IActionResult OnGet(string? search, bool? active, int currentPage = 1, int size = 5)
         {
             if (!IsStaff) return Unauthorized();
 
@@ -51,12 +51,12 @@ namespace Presentation.Pages.CategoryManagement
 
             // Gán giá trị cho properties (thay vì ViewBag)
 
-            CurrentPage = page;
+            CurrentPage = currentPage;
             TotalPages = (int)Math.Ceiling(q.Count() / (double)size);
             Search = search;
             Status = active;
 
-            Categories = q.Skip((page - 1) * size).Take(size);
+            Categories = q.Skip((currentPage - 1) * size).Take(size);
 
             // Hiển thị thông báo nếu có
             if (!string.IsNullOrEmpty(SuccessMessage))
