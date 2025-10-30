@@ -44,7 +44,7 @@
             // SignalR event handlers
             conn.on("ReceiveComment", (data) => {
                 console.log('💬 New comment from:', data.user, '| Message:', data.message.substring(0, 50));
-                addComment(data.user, data.message, data.timestamp);
+                addComment(data.commentId, data.user, data.message, data.timestamp);
             });
 
             conn.on("CommentDeleted", (data) => {
@@ -183,18 +183,18 @@
             }
 
             // Add comment to UI
-            function addComment(user, msg, time) {
+            function addComment(commentId, user, msg, time) {
                 const list = document.getElementById('commentsList');
                 const placeholder = list?.querySelector('.text-muted.text-center');
                 if (placeholder) placeholder.remove();
 
                 const div = document.createElement('div');
                 div.className = 'mb-3 p-3 bg-white rounded shadow-sm';
-                div.id = `comment-temp-${Date.now()}`;
+                div.id = `comment-${commentId}`;
 
                 const delBtn = isAdmin ? `
                     <button class="btn btn-sm btn-outline-danger delete-comment-btn ms-2" 
-                            data-comment-id="${div.id}">
+                            data-comment-id="${commentId}">
                         <i class="bi bi-trash"></i>
                     </button>` : '';
 

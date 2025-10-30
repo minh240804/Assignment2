@@ -59,7 +59,7 @@ namespace Presentation.Pages.NewsArticleManagement
                     message = $"Article deleted: \"{articleToDelete.NewsTitle}\"",
                     timestamp = DateTime.Now
                 });
-                
+
                 TempData["SuccessMessage"] = "Article deleted successfully.";
             }
             return RedirectToPage();

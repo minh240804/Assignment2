@@ -104,14 +104,15 @@ namespace Presentation.Pages.NewsArticle
             var userName = _httpContextAccessor.HttpContext?.Session.GetString("Name") ?? "User";
             var timestamp = DateTime.Now;
 
-            // Save comment to database
-            _commentService.Add(articleId, (short)accountId.Value, message);
+            // Save comment to database and get the created comment with ID
+            var newComment = _commentService.Add(articleId, (short)accountId.Value, message);
 
             // Send comment to all clients in the article group via SignalR
             await _hubContext.Clients
                 .Group($"article_{articleId}")
                 .SendAsync("ReceiveComment", new
                 {
+                    commentId = newComment.CommentId,
                     user = userName,
                     message = message,
                     timestamp = timestamp.ToString("HH:mm:ss dd/MM/yyyy")
@@ -129,6 +130,7 @@ namespace Presentation.Pages.NewsArticle
             return new JsonResult(new
             {
                 success = true,
+                commentId = newComment.CommentId,
                 user = userName,
                 message = message,
                 timestamp = timestamp.ToString("HH:mm:ss dd/MM/yyyy")
@@ -143,7 +145,7 @@ namespace Presentation.Pages.NewsArticle
                 var accountId = _httpContextAccessor.HttpContext?.Session.GetInt32("AccountId");
                 var role = _httpContextAccessor.HttpContext?.Session.GetInt32("Role");
                 
-                if (!accountId.HasValue || role != 0)
+                if (!accountId.HasValue || !role.HasValue || role.Value != 0)
                 {
                     return new JsonResult(new { success = false, error = "Only admins can delete comments" }) 
                     { 
