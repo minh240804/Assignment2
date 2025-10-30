@@ -9,7 +9,9 @@
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
 
-<form method="post" id="articleForm" onsubmit="return submitForm(this);">
+
+
+<form method="post" asp-page="/NewsArticleManagement/Form">
     <div class="modal-body">
         <input type="hidden" asp-for="Article.NewsArticleId" />
         <input type="hidden" asp-for="Article.CreatedById" value="@Model.CurrentUserId" />
@@ -68,16 +70,12 @@
         <!-- Published -->
         <div class="mb-3">
             <div class="form-check form-switch">
-                <input type="hidden" name="Article.NewsStatus" value="false" />
-                <input type="checkbox"
-                       class="form-check-input"
-                       id="publishedSwitch"
-                       name="Article.NewsStatus"
-                       value="true"
-                @(Model.Article.NewsStatus ? "checked" : "") />
+                <input asp-for="Article.NewsStatus" class="form-check-input" id="publishedSwitch" />
                 <label class="form-check-label" for="publishedSwitch">Published</label>
             </div>
+            <span asp-validation-for="Article.NewsStatus" class="text-danger"></span>
         </div>
+
     </div>
 
     <div class="modal-footer">
@@ -86,55 +84,11 @@
     </div>
 </form>
 
+
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
-
-<script>
-    function submitForm(form) {
-        const btn = $("#saveBtn");
-        btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-1"></span>Saving...');
-
-        $.ajax({
-            type: "POST",
-            url: form.action || window.location.href,
-            data: $(form).serialize(),
-            success: function (result) {
-                btn.prop("disabled", false).html("Save");
-
-                if (result.success) {
-                    // ✅ 1. Hiện thông báo thành công
-                    toastr.success("News article saved successfully!", "Success");
-
-                    // ✅ 2. Đóng modal
-                    $("#form-modal").modal("hide");
-
-                    // ✅ 3. Reload lại danh sách bài viết (nếu có)
-                    if (typeof loadArticles === "function") {
-                        loadArticles();
-                    } else {
-                        location.reload();
-                    }
-                } else {
-                    let errorHtml = '<div class="alert alert-danger">';
-                    if (result.errors) {
-                        for (const key in result.errors) {
-                            errorHtml += `<p>${result.errors[key]}</p>`;
-                        }
-                    } else {
-                        errorHtml += `<p>${result.error || "An error occurred."}</p>`;
-                    }
-                    errorHtml += "</div>";
-
-                    $(form).find(".modal-body").prepend(errorHtml);
-                    $(".modal-body").scrollTop(0);
-                }
-            },
-            error: function (xhr) {
-                btn.prop("disabled", false).html("Save");
-                toastr.error("Failed to save article. Error " + xhr.status, "Error");
-            }
-        });
-        return false;
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-</script>
+
+    <script>window.currentArticleId = "@Model.Article.NewsArticleId";</script>
+}

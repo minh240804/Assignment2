@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using Assignment2.BusinessLogic;
 using Assignment2.DataAccess.Models;
 using Presentation.Hubs;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace Presentation.Pages.NewsArticleManagement
 {
@@ -14,19 +15,22 @@ namespace Presentation.Pages.NewsArticleManagement
         private readonly ITagService _tagService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IAccountService _accountService;
 
         public FormModel(
             INewsArticleService newsArticleService,
             ICategoryService categoryService,
             ITagService tagService,
             IHttpContextAccessor httpContextAccessor,
-            IHubContext<NotificationHub> hubContext)
+            IHubContext<NotificationHub> hubContext,
+            IAccountService accountService)
         {
             _newsArticleService = newsArticleService;
             _categoryService = categoryService;
             _tagService = tagService;
             _httpContextAccessor = httpContextAccessor;
             _hubContext = hubContext;
+            _accountService = accountService;
         }
 
         [BindProperty]
@@ -37,6 +41,8 @@ namespace Presentation.Pages.NewsArticleManagement
 
         public IList<Category> Categories { get; set; } = default!;
         public IList<Tag> Tags { get; set; } = default!;
+
+        public bool IsModal { get; set; }
 
         public bool IsCreate => string.IsNullOrEmpty(Article?.NewsArticleId);
         public bool IsStaff => _httpContextAccessor.HttpContext?.Session.GetInt32("Role") == 1;
@@ -71,12 +77,6 @@ namespace Presentation.Pages.NewsArticleManagement
 
         public async Task<IActionResult> OnPostAsync()
         {
-            if (!ModelState.IsValid)
-            {
-                LoadLookupData();
-                return Page();
-            }
-
             bool isNew = string.IsNullOrEmpty(Article.NewsArticleId);
 
             if (isNew)
@@ -86,27 +86,31 @@ namespace Presentation.Pages.NewsArticleManagement
                 Article.CreatedDate = DateTime.Now;
                 Article.ModifiedDate = DateTime.Now;
 
-                if (!IsStaff)
-                    Article.NewsStatus = false;
+
+
+                // Non-staff không được publish khi tạo
+                if (!IsStaff) Article.NewsStatus = false;
 
                 _newsArticleService.Add(Article, SelectedTags ?? Array.Empty<int>());
 
-                if (Article.NewsStatus == true)
+                var a = _accountService.Get(Article.CreatedById.Value);
+
+                if (Article.NewsStatus)
                 {
-                    await _hubContext.Clients.All.SendAsync("ReceiveNewArticleNotification",
-                        $"New article published: {Article.Headline}");
+                    await _hubContext.Clients.All.SendAsync("NewArticlePublished",
+                       $"New Article Published by {a.AccountName}");
                 }
             }
             else
             {
                 var existing = _newsArticleService.Get(Article.NewsArticleId);
-                if (existing == null)
-                    return NotFound();
+                if (existing == null) return NotFound();
 
-                if (!IsStaff && existing.CreatedById != CurrentUserId)
-                    return Unauthorized();
+                if (!IsStaff && existing.CreatedById != CurrentUserId) return Unauthorized();
 
-                // Cập nhật thông tin
+                bool wasPublished = existing.NewsStatus;
+
+                // Cập nhật trường
                 existing.NewsTitle = Article.NewsTitle;
                 existing.Headline = Article.Headline;
                 existing.NewsContent = Article.NewsContent;
@@ -116,18 +120,28 @@ namespace Presentation.Pages.NewsArticleManagement
 
                 if (IsStaff)
                     existing.NewsStatus = Article.NewsStatus;
+                else
+                    existing.NewsStatus = false;
 
                 _newsArticleService.Update(existing, SelectedTags ?? Array.Empty<int>());
 
-                if (Article.NewsStatus == true && existing.NewsStatus == false)
+
+                if (!wasPublished && existing.NewsStatus)
                 {
-                    await _hubContext.Clients.All.SendAsync("ReceiveNewArticleNotification",
-                        $"Article published: {Article.Headline}");
+                    await _hubContext.Clients.All.SendAsync("NewArticlePublished",
+                       $"New Article Published by {existing.CreatedBy.AccountName}");
                 }
+
+                await _hubContext.Clients.All.SendAsync("UpdateNewsArticle", Article.NewsArticleId.ToString());
+
+
+                TempData["SuccessMessage"] = "News updated successfully.";
             }
 
-            return new JsonResult(new { success = true });
+            if (IsModal) return new JsonResult(new { success = true });
+            return RedirectToPage("Index");
         }
+
 
         private void LoadLookupData()
         {
