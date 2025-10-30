@@ -107,8 +107,14 @@ namespace Presentation.Pages.CategoryManagement
             {
                 _cats.Add(Category);
                 SuccessMessage = "Category created successfully.";
-                _hubContext.Clients.All.SendAsync("ReceiveCreateCategoryNotification",
+                //_hubContext.Clients.All.SendAsync("ReceiveCreateCategoryNotification",
+                //    $"A new category has been created: {Category.CategoryName}");
+                _hubContext.Clients.All.SendAsync("ReloadCategoryList");
+                _hubContext.Clients.Group("Staff").SendAsync("ReceiveCreateCategoryNotification",
                     $"A new category has been created: {Category.CategoryName}");
+                _hubContext.Clients.Group("Admin").SendAsync("ReceiveCreateCategoryNotification",
+                    $"A new category has been created: {Category.CategoryName}");
+
             }
             else
             {
@@ -121,9 +127,14 @@ namespace Presentation.Pages.CategoryManagement
                     LoadLookups(Category.ParentCategoryId);
                     return Page();
                 }
-                _hubContext.Clients.All.SendAsync("ReceiveCreateCategoryNotification",
-                    $"A category has been updated: {Category.CategoryName}");
+                //_hubContext.Clients.All.SendAsync("ReceiveCreateCategoryNotification",
+                //    $"A category has been updated: {Category.CategoryName}");
                 _hubContext.Clients.All.SendAsync("ReloadCategoryList");
+                _hubContext.Clients.Group("Staff").SendAsync("ReceiveCreateCategoryNotification",
+                    $"A new category has been created: {Category.CategoryName}");
+                _hubContext.Clients.Group("Admin").SendAsync("ReceiveCreateCategoryNotification",
+                    $"A new category has been created: {Category.CategoryName}");
+
             }
 
             return RedirectToPage("Index"); ;

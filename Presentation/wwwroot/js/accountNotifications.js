@@ -198,6 +198,20 @@ connection.on("ReceiveCreateCategoryNotification", function (message) {
     else console.log("[Toast]", message);
 });
 
+connection.on("ReloadCategoryList", function () {
+    try {
+        if (window.isCategoryList) {
+            if (typeof debounce === "function") {
+                debounce(() => location.reload(), 300)();
+            } else {
+                setTimeout(() => location.reload(), 300);
+            }
+        }
+    } catch (e) {
+        console.error("[SR] Error during ReloadCategoryList:", e);
+    }
+});
+
 /* =========================
    5) Lifecycle logs & re-register
    ========================= */
