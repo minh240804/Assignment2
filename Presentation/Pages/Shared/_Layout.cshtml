@@ -113,6 +113,7 @@
 
         // ====== Khởi động & Join group sau login ======
         if (window.currentAccountId > 0) {
+            console.log("Initializing SignalR for account:", window.currentAccountId);
             // 1) Start kết nối (định nghĩa trong accountNotifications.js)
             startSignalRConnection(window.currentAccountId);
             // 2) Join group theo role + account (đợi 200ms đảm bảo đã Connected)

@@ -18,4 +18,6 @@ public partial class SystemAccount
     public bool AccountStatus { get; set; } = true;
 
     public virtual ICollection<NewsArticle> NewsArticles { get; set; } = new List<NewsArticle>();
+    
+    public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 }
