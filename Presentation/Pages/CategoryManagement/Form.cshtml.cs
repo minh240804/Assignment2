@@ -47,12 +47,17 @@ namespace Presentation.Pages.CategoryManagement
         {
             if (!IsStaff) return Unauthorized();
 
+            // Lấy tất cả danh mục (bao gồm cả con để chọn cha)
             var allCat = _cats.GetAll(true).ToList();
+
+            IsCreate = !id.HasValue;
 
             if (id.HasValue)
             {
                 var existingCategory = _cats.Get(id.Value);
-                if (existingCategory == null) return NotFound();
+                if (existingCategory == null)
+                    return NotFound();
+
                 Category = new Category
                 {
                     CategoryId = existingCategory.CategoryId,
@@ -62,13 +67,19 @@ namespace Presentation.Pages.CategoryManagement
                     IsActive = existingCategory.IsActive
                 };
             }
+            else
+            {
+                Category = new Category { IsActive = true };
+            }
 
+            // Tạo dropdown danh mục cha
             ParentCategories = allCat
                 .Where(c => !id.HasValue || c.CategoryId != id.Value)
                 .Select(c => new SelectListItem
                 {
                     Value = c.CategoryId.ToString(),
-                    Text = c.CategoryName
+                    Text = c.CategoryName,
+                    Selected = Category.ParentCategoryId == c.CategoryId
                 })
                 .ToList();
 

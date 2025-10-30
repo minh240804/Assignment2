@@ -16,7 +16,7 @@
     <div class="modal-body">
         @if (!Model.IsCreate)
         {
-            <input type="hidden" asp-for="Category.CategoryId" />
+            <input type="hidden" asp-for="Category.CategoryId"/>
         }
 
         <div class="form-group mb-3">
@@ -32,9 +32,6 @@
 
         <div class="form-group  mb-3">
             <label asp-for="Category.ParentCategoryId" class="form-label"></label>
-            @* <select asp-for="Category.ParentCategoryId" asp-items="@(ViewData["ParentList"] as SelectList)" class="form-select">
-                <option value="">-- None --</option>
-            </select> *@
             <select asp-for="Category.ParentCategoryId"
                     asp-items="Model.ParentCategories"
                     class="form-control">
