@@ -28,11 +28,22 @@ namespace Presentation.Pages.AccountManagement
             var account = _acc.Get(id);
             if (account == null) return NotFound();
 
+            var accountName = account.AccountName; // Store name before deletion
+
             await _hub.Clients.All.SendAsync("AccountDeactivated", id.ToString());
 
             
             // Delete the account
             _acc.Delete(id);
+            
+            // Notify dashboard
+            await _hub.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+            {
+                eventType = "delete",
+                entityType = "account",
+                message = $"Account deleted: {accountName}",
+                timestamp = DateTime.Now
+            });
             
             TempData["SuccessMessage"] = "Account deleted successfully.";
             return RedirectToPage();

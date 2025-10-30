@@ -117,6 +117,15 @@ namespace Presentation.Pages.NewsArticle
                     timestamp = timestamp.ToString("HH:mm:ss dd/MM/yyyy")
                 });
 
+            // Notify dashboard about new comment
+            await _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+            {
+                eventType = "create",
+                entityType = "comment",
+                message = $"New comment by {userName} on article {articleId}",
+                timestamp = DateTime.Now
+            });
+
             return new JsonResult(new
             {
                 success = true,
@@ -179,6 +188,15 @@ namespace Presentation.Pages.NewsArticle
                         commentId = commentId,
                         message = "A comment was removed by moderator"
                     });
+
+                // Notify dashboard about comment deletion
+                await _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+                {
+                    eventType = "delete",
+                    entityType = "comment",
+                    message = $"Comment #{commentId} deleted by {adminName}",
+                    timestamp = DateTime.Now
+                });
 
                 return new JsonResult(new
                 {

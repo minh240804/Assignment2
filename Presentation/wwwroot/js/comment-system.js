@@ -25,13 +25,13 @@
 
         async function getConnection() {
             for (let i = 0; i < 30; i++) {
-                if (window.sharedSignalRConnection) {
-                    console.log('Connection found');
-                    return window.sharedSignalRConnection;
+                if (window.connection) {
+                    console.log('✅ Connection found');
+                    return window.connection;
                 }
                 await new Promise(r => setTimeout(r, 500));
             }
-            console.error('Connection timeout');
+            console.error('❌ Connection timeout');
             return null;
         }
 
@@ -43,7 +43,7 @@
 
             // SignalR event handlers
             conn.on("ReceiveComment", (data) => {
-                console.log('New comment from:', data.user);
+                console.log('💬 New comment from:', data.user, '| Message:', data.message.substring(0, 50));
                 addComment(data.user, data.message, data.timestamp);
             });
 
@@ -123,12 +123,14 @@
 
                     if (result.success) {
                         input.value = '';
+                        console.log('✅ Comment posted successfully');
                         showAlert('Comment posted!', 'success');
                     } else {
+                        console.error('❌ Post failed:', result.error);
                         showAlert(result.error || 'Failed', 'error');
                     }
                 } catch (err) {
-                    console.error('Post error:', err);
+                    console.error('❌ Post error:', err);
                     showAlert('Failed to post', 'error');
                 } finally {
                     if (btn) {

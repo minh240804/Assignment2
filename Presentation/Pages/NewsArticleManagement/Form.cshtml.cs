@@ -95,6 +95,15 @@ namespace Presentation.Pages.NewsArticleManagement
 
                 var a = _accountService.Get(Article.CreatedById.Value);
 
+                // Notify dashboard about new article
+                await _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+                {
+                    eventType = "create",
+                    entityType = "article",
+                    message = $"New article created: {Article.NewsTitle} by {a.AccountName}",
+                    timestamp = DateTime.Now
+                });
+
                 if (Article.NewsStatus)
                 {
                     await _hubContext.Clients.All.SendAsync("NewArticlePublished",
@@ -125,6 +134,14 @@ namespace Presentation.Pages.NewsArticleManagement
 
                 _newsArticleService.Update(existing, SelectedTags ?? Array.Empty<int>());
 
+                // Notify dashboard about article update
+                await _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+                {
+                    eventType = "update",
+                    entityType = "article",
+                    message = $"Article updated: {existing.NewsTitle}",
+                    timestamp = DateTime.Now
+                });
 
                 if (!wasPublished && existing.NewsStatus)
                 {
