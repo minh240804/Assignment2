@@ -1,4 +1,4 @@
-// accountNotifications.js
+﻿// accountNotifications.js
 "use strict";
 
 var connection = new signalR.HubConnectionBuilder()
@@ -6,10 +6,14 @@ var connection = new signalR.HubConnectionBuilder()
     .build();
 
 connection.on("ReceiveNewAccountNotification", function (message) {
-    // Show notification to staff users
-    if (window.userRole === 1) { // Staff role
+    if (window.userRole === 1) { 
         toastr.info(message);
     }
+});
+
+connection.on("NewArticlePublished", function (message) {
+        toastr.info(message);
+    
 });
 
 connection.on("AccountDeactivated", function (accountId) {
@@ -38,6 +42,27 @@ connection.on("AccountDeactivated", function (accountId) {
     }
 });
 
+function debounce(fn, ms) { let t; return function () { clearTimeout(t); t = setTimeout(fn, ms); }; }
+
+connection.on("UpdateNewsArticle", function (articleId) {
+    console.log("[SR] UpdateNewsArticle received for:", articleId,
+        " currentArticleId:", window.currentArticleId,
+        " isNewsList:", window.isNewsList);
+
+    try {
+        const sameArticle = String(window.currentArticleId) === String(articleId);
+        if (sameArticle || window.isNewsList) {
+            // nếu chưa có debounce, dùng setTimeout
+            if (typeof debounce === "function") debounce(() => location.reload(), 300)();
+            else setTimeout(() => location.reload(), 300);
+        }
+    } catch (e) { console.error(e); }
+});
+
+
+
+
+
 // Function to start the connection and register the current user's connection
 async function startSignalRConnection(accountId) {
     try {
@@ -50,6 +75,12 @@ async function startSignalRConnection(accountId) {
         setTimeout(() => startSignalRConnection(accountId), 5000);
     }
 }
+
+
+
+
+
+
 
 // Reconnect if connection is lost
 connection.onclose(async () => {

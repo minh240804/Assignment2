@@ -1,3 +1,4 @@
+using Assignment2.DataAccess.Models;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Presentation.Hubs
@@ -54,5 +55,18 @@ namespace Presentation.Hubs
             await Clients.Group($"account_{accountId}")
                 .SendAsync("ForceLogout", new { reason = reason ?? "account_deleted" });
         }
+
+        private static string BuildArticleUpdatedMsg(NewsArticle art, string updaterName)
+        {
+            var title = string.IsNullOrWhiteSpace(art.NewsTitle) ? (art.Headline ?? "(No title)") : art.NewsTitle;
+            return $" Article updated: {title} — by {updaterName} at {DateTime.Now:HH:mm dd/MM}.";
+        }
+
+        private static string BuildArticleDeletedMsg(NewsArticle art, string actorName)
+        {
+            var title = string.IsNullOrWhiteSpace(art.NewsTitle) ? (art.Headline ?? "(No title)") : art.NewsTitle;
+            return $" Article deleted: {title} — by {actorName} at {DateTime.Now:HH:mm dd/MM}.";
+        }
+
     }
 }
