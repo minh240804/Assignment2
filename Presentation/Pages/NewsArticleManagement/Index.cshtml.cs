@@ -23,7 +23,7 @@ namespace Presentation.Pages.NewsArticleManagement
             _hubContext = hubContext;
         }
 
-        public List<NewsArticle> Articles { get; set; } = new List<NewsArticle>();
+        public List<Assignment2.DataAccess.Models.NewsArticle> Articles { get; set; } = new List<Assignment2.DataAccess.Models.NewsArticle>();
         
         public bool IsStaff => _httpContextAccessor.HttpContext?.Session.GetInt32("Role") == 1;
 

@@ -33,4 +33,6 @@ public partial class NewsArticle
     public virtual SystemAccount? UpdatedBy { get; set; }
 
     public virtual ICollection<Tag> Tags { get; set; } = new List<Tag>();
+    
+    public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 }

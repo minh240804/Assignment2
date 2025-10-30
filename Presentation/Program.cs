@@ -21,7 +21,15 @@ namespace Assignment2
 
             // Configure database
             builder.Services.AddDbContext<FunewsManagementContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(
+                    builder.Configuration.GetConnectionString("DefaultConnection"),
+                    sqlServerOptionsAction: sqlOptions =>
+                    {
+                        sqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 5,
+                            maxRetryDelay: TimeSpan.FromSeconds(30),
+                            errorNumbersToAdd: null);
+                    }));
             
             // Configure Admin Account Options
             builder.Services.Configure<AdminAccountOptions>(
@@ -32,18 +40,21 @@ namespace Assignment2
             builder.Services.AddScoped<CategoryDAO>();
             builder.Services.AddScoped<NewsArticleDAO>();
             builder.Services.AddScoped<TagDAO>();
+            builder.Services.AddScoped<ArticleCommentDAO>();
 
             // Register Repositories
             builder.Services.AddScoped<IAccountRepository, AccountRepository>();
             builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
             builder.Services.AddScoped<INewsArticleRepository, NewsArticleRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
+            builder.Services.AddScoped<IArticleCommentRepository, ArticleCommentRepository>();
 
             // Register Services
             builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddScoped<ICategoryService, CategoryService>();
             builder.Services.AddScoped<INewsArticleService, NewsArticleService>();
             builder.Services.AddScoped<ITagService, TagService>();
+            builder.Services.AddScoped<IArticleCommentService, ArticleCommentService>();
 
             // Configure Session
             builder.Services.AddDistributedMemoryCache();

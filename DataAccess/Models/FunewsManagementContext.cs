@@ -24,6 +24,8 @@ namespace Assignment2.DataAccess.Models
         public virtual DbSet<SystemAccount> SystemAccounts { get; set; }
 
         public virtual DbSet<Tag> Tags { get; set; }
+        
+        public virtual DbSet<Comment> Comments { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -124,6 +126,47 @@ namespace Assignment2.DataAccess.Models
                     .HasColumnName("TagID");
                 entity.Property(e => e.Note).HasMaxLength(400);
                 entity.Property(e => e.TagName).HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<Comment>(entity =>
+            {
+                entity.HasKey(e => e.CommentId);
+
+                entity.ToTable("Comment");
+
+                entity.Property(e => e.CommentId).HasColumnName("CommentId");
+                entity.Property(e => e.ArticleId)
+                    .HasMaxLength(20)
+                    .HasColumnName("ArticleId");
+                entity.Property(e => e.AccountId).HasColumnName("AccountId");
+                entity.Property(e => e.Content).IsRequired();
+                entity.Property(e => e.CreatedAt)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+                entity.Property(e => e.IsDeleted)
+                    .HasDefaultValue(false);
+                entity.Property(e => e.DeletedBy).HasColumnName("DeletedBy");
+                entity.Property(e => e.DeletedAt)
+                    .HasColumnType("datetime")
+                    .HasColumnName("DeletedAt");
+
+                entity.HasOne(d => d.Article)
+                    .WithMany(p => p.Comments)
+                    .HasForeignKey(d => d.ArticleId)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .HasConstraintName("FK_Comment_NewsArticle");
+
+                entity.HasOne(d => d.Account)
+                    .WithMany(p => p.Comments)
+                    .HasForeignKey(d => d.AccountId)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .HasConstraintName("FK_Comment_SystemAccount");
+                
+                entity.HasOne(d => d.DeletedByAccount)
+                    .WithMany()
+                    .HasForeignKey(d => d.DeletedBy)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .HasConstraintName("FK_Comment_SystemAccount_DeletedBy");
             });
 
             OnModelCreatingPartial(modelBuilder);
