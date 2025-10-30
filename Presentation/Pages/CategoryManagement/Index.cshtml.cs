@@ -36,19 +36,8 @@ namespace Presentation.Pages.CategoryManagement
         private int? Role => HttpContext.Session.GetInt32("Role");
         private bool IsStaff => Role == 1;
 
-        private void LoadLookups(short? parentId = null) =>
-            ViewData["ParentList"] = new SelectList(_cats.GetAll(true), "CategoryId", "CategoryName", parentId);
-
-        private void Validate(Category c)
-        {
-            if (string.IsNullOrWhiteSpace(c.CategoryName))
-                ModelState.AddModelError(nameof(c.CategoryName), "Name is required");
-            if (c.ParentCategoryId == c.CategoryId)
-                ModelState.AddModelError(nameof(c.ParentCategoryId), "Parent cannot be itself");
-        }
-
         // Handler cho HTTP GET (thay thế action Index)
-        public IActionResult OnGet(string? search, bool? active, int page = 1, int size = 5)
+        public IActionResult OnGet(string? search, bool? active, int currentPage = 1, int size = 5)
         {
             if (!IsStaff) return Unauthorized();
 
@@ -57,12 +46,13 @@ namespace Presentation.Pages.CategoryManagement
                 q = q.Where(x => x.CategoryName.Contains(search, StringComparison.OrdinalIgnoreCase));
 
             // Gán giá trị cho properties (thay vì ViewBag)
-            CurrentPage = page;
+
+            CurrentPage = currentPage;
             TotalPages = (int)Math.Ceiling(q.Count() / (double)size);
             Search = search;
             Status = active;
 
-            Categories = q.Skip((page - 1) * size).Take(size);
+            Categories = q.Skip((currentPage - 1) * size).Take(size);
 
             // Hiển thị thông báo nếu có
             if (!string.IsNullOrEmpty(SuccessMessage))

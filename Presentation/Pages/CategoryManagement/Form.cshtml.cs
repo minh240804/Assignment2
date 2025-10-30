@@ -47,12 +47,17 @@ namespace Presentation.Pages.CategoryManagement
         {
             if (!IsStaff) return Unauthorized();
 
+            // Lấy tất cả danh mục (bao gồm cả con để chọn cha)
             var allCat = _cats.GetAll(true).ToList();
+
+            IsCreate = !id.HasValue;
 
             if (id.HasValue)
             {
                 var existingCategory = _cats.Get(id.Value);
-                if (existingCategory == null) return NotFound();
+                if (existingCategory == null)
+                    return NotFound();
+
                 Category = new Category
                 {
                     CategoryId = existingCategory.CategoryId,
@@ -62,13 +67,19 @@ namespace Presentation.Pages.CategoryManagement
                     IsActive = existingCategory.IsActive
                 };
             }
+            else
+            {
+                Category = new Category { IsActive = true };
+            }
 
+            // Tạo dropdown danh mục cha
             ParentCategories = allCat
                 .Where(c => !id.HasValue || c.CategoryId != id.Value)
                 .Select(c => new SelectListItem
                 {
                     Value = c.CategoryId.ToString(),
-                    Text = c.CategoryName
+                    Text = c.CategoryName,
+                    Selected = Category.ParentCategoryId == c.CategoryId
                 })
                 .ToList();
 
@@ -96,8 +107,14 @@ namespace Presentation.Pages.CategoryManagement
             {
                 _cats.Add(Category);
                 SuccessMessage = "Category created successfully.";
-                _hubContext.Clients.All.SendAsync("ReceiveCreateCategoryNotification",
+                //_hubContext.Clients.All.SendAsync("ReceiveCreateCategoryNotification",
+                //    $"A new category has been created: {Category.CategoryName}");
+                _hubContext.Clients.All.SendAsync("ReloadCategoryList");
+                _hubContext.Clients.Group("Staff").SendAsync("ReceiveCreateCategoryNotification",
                     $"A new category has been created: {Category.CategoryName}");
+                _hubContext.Clients.Group("Admin").SendAsync("ReceiveCreateCategoryNotification",
+                    $"A new category has been created: {Category.CategoryName}");
+
             }
             else
             {
@@ -110,9 +127,14 @@ namespace Presentation.Pages.CategoryManagement
                     LoadLookups(Category.ParentCategoryId);
                     return Page();
                 }
-                _hubContext.Clients.All.SendAsync("ReceiveCreateCategoryNotification",
-                    $"A category has been updated: {Category.CategoryName}");
+                //_hubContext.Clients.All.SendAsync("ReceiveCreateCategoryNotification",
+                //    $"A category has been updated: {Category.CategoryName}");
                 _hubContext.Clients.All.SendAsync("ReloadCategoryList");
+                _hubContext.Clients.Group("Staff").SendAsync("ReceiveCreateCategoryNotification",
+                    $"A new category has been created: {Category.CategoryName}");
+                _hubContext.Clients.Group("Admin").SendAsync("ReceiveCreateCategoryNotification",
+                    $"A new category has been created: {Category.CategoryName}");
+
             }
 
             return RedirectToPage("Index"); ;
