@@ -3,14 +3,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <meta charset="utf-8" />
-   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-   <title>@ViewData["Title"] - Assignment2</title>
-   <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-   <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-   @* <link rel="stylesheet" href="~/Assignment2.styles.css" asp-append-version="true" /> *@
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Assignment2</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+
+    <!-- SignalR 8.x (duy nhất) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
 </head>
 <body>
     <header>
@@ -26,13 +28,15 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
                         </li>
+
                         @{
                             var name = HttpContextAccessor.HttpContext?.Session.GetString("Name");
                             var role = HttpContextAccessor.HttpContext?.Session.GetInt32("Role");
                         }
+
                         @if (!string.IsNullOrEmpty(name))
                         {
-                            @if (role == 0)
+                            if (role == 0)
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-page="/AccountManagement/Index">Accounts</a>
@@ -40,19 +44,21 @@
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" href="/TagManagerment/Index">Tag Management</a>
                                 </li>
-                            } else if (role ==1)
+                            }
+                            else if (role == 1)
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-page="/CategoryManagement/Index">Category</a>
                                 </li>
-							}
+                            }
+
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-page="/AccountManagement/Profile">@name</a>
                             </li>
-                            
+
                             <li class="nav-item">
-                                <form method="post" asp-page="/AccountManagement/Login" asp-page-handler="Logout" class="form-inline">
-                                    <button type="submit" class="btn btn-link nav-link text-dark">Logout</button>
+                                <form id="logoutForm" method="post" asp-page="/AccountManagement/Login" asp-page-handler="Logout" class="form-inline">
+                                    <button id="logoutBtn" type="submit" class="btn btn-link nav-link text-dark">Logout</button>
                                 </form>
                             </li>
                         }
@@ -67,6 +73,7 @@
             </div>
         </nav>
     </header>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
@@ -83,29 +90,53 @@
     <div class="modal fade" id="form-modal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-body">
-                </div>
+                <div class="modal-body"></div>
             </div>
         </div>
     </div>
 
+    <!-- Libs -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
+
+    <!-- App scripts -->
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/accountNotifications.js" asp-append-version="true"></script>
 
     <script>
-        // Set up global variables for SignalR
-        window.userRole = @(role ?? -1);
+        // ====== Globals từ Session ======
+        window.userRole = @(role ?? -1); // 0=Admin,1=Staff,2=Lecturer
         window.currentAccountId = @(HttpContextAccessor.HttpContext?.Session.GetInt32("AccountId") ?? -1);
-        
-        // Initialize SignalR connection when logged in
+
+        console.log("[SR] Globals -> role:", window.userRole, "accountId:", window.currentAccountId);
+
+        // ====== Khởi động & Join group sau login ======
         if (window.currentAccountId > 0) {
-            console.log("Initializing SignalR for account:", window.currentAccountId);
+            // 1) Start kết nối (định nghĩa trong accountNotifications.js)
             startSignalRConnection(window.currentAccountId);
+            // 2) Join group theo role + account (đợi 200ms đảm bảo đã Connected)
+            setTimeout(registerRoleAndAccount, 200);
+        } else {
+            console.log("[SR] Not starting SignalR (anonymous or no accountId).");
         }
+
+        // ====== Logout: rời group rồi mới submit ======
+        (function wireLogoutInterceptor() {
+            const logoutForm = document.getElementById('logoutForm');
+            const logoutBtn  = document.getElementById('logoutBtn');
+            if (!logoutForm || !logoutBtn) {
+                console.log("[SR] Logout form not found.");
+                return;
+            }
+            logoutBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                (async () => {
+                    await unregisterRoleThenStop(); // defined in accountNotifications.js
+                    logoutForm.submit();
+                })();
+            });
+        })();
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)

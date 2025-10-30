@@ -87,7 +87,10 @@ namespace Presentation.Pages.AccountManagement
                 if (IsCreate)
                 {
                     _acc.Add(Account, Password);
-                    await _hubContext.Clients.All.SendAsync("ReceiveNewAccountNotification",
+                    //await _hubContext.Clients.Group("Admin").SendAsync("ReceiveNewAccountNotification",
+                    //    $"Admin has added a new account: {Account.AccountName}");
+                    
+                    await _hubContext.Clients.Group("Staff").SendAsync("ReceiveNewAccountNotification",
                         $"Admin has added a new account: {Account.AccountName}");
                     TempData["SuccessMessage"] = "Account created successfully.";
                 }

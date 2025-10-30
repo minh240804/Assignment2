@@ -1,3 +1,4 @@
+ï»¿using System.Security.Claims;
 using Assignment2.DataAccess.Models;
 using Microsoft.AspNetCore.SignalR;
 
@@ -5,71 +6,79 @@ namespace Presentation.Hubs
 {
     public class NotificationHub : Hub
     {
-        public async Task NotifyNewAccount(string message)
+        private const string Group_Admin = "Admin";
+        private const string Group_Staff = "Staff";
+        private const string Group_Lecturer = "Lecturer";
+
+        private static string? MapRole(int role) => role switch
         {
-            await Clients.All.SendAsync("ReceiveNewAccountNotification", message);
+            0 => Group_Admin,
+            1 => Group_Staff,
+            2 => Group_Lecturer,
+            _ => null
+        };
+
+        private static string? GetRoleGroupFromContext(HubCallerContext ctx)
+        {
+            var roleStr = ctx.User?.FindFirst(ClaimTypes.Role)?.Value
+                          ?? ctx.User?.FindFirst("Role")?.Value;
+            if (!int.TryParse(roleStr, out var role)) return null;
+            return MapRole(role);
         }
 
-        public async Task NotifyAccountDeactivated(string accountId)
+        public override async Task OnConnectedAsync()
         {
-            await Clients.All.SendAsync("AccountDeactivated", accountId);
+            var roleGroup = GetRoleGroupFromContext(Context);
+            if (!string.IsNullOrEmpty(roleGroup))
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, roleGroup);
+            }
+            await base.OnConnectedAsync();
         }
 
-        public async Task RegisterConnection(string accountId)
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, $"account_{accountId}");
+            var roleGroup = GetRoleGroupFromContext(Context);
+            if (!string.IsNullOrEmpty(roleGroup))
+            {
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, roleGroup);
+            }
+            await base.OnDisconnectedAsync(exception);
         }
 
-        public async Task JoinArticleGroup(string articleId)
+        public async Task<string> RegisterUserRole(int role)
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, $"article_{articleId}");
+            var grp = MapRole(role);
+            if (!string.IsNullOrEmpty(grp))
+                await Groups.AddToGroupAsync(Context.ConnectionId, grp);
+            return grp ?? string.Empty; 
+        }
+        public async Task UnregisterUserRole(int role)
+        {
+            var grp = MapRole(role);
+            if (!string.IsNullOrEmpty(grp))
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, grp);
         }
 
-        public async Task LeaveArticleGroup(string articleId)
+        public async Task<string> RegisterConnection(string accountId)
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"article_{articleId}");
+            var grp = $"account_{accountId}";
+            await Groups.AddToGroupAsync(Context.ConnectionId, grp);
+            return grp; 
         }
 
-        public async Task NotifyArticleUpdate(string articleId, string title, string content)
-        {
-            await Clients.Group($"article_{articleId}").SendAsync("ArticleUpdated", articleId, title, content);
-        }
-
-        public async Task NotifyArticleDeleted(string articleId, string title)
-        {
-            await Clients.All.SendAsync("ArticleDeleted", articleId, title);
-        }
-
-        public async Task NotifyNewArticle(string authorName, string articleTitle)
-        {
-            await Clients.All.SendAsync("NewArticlePublished", authorName, articleTitle);
-        }
-
-        public async Task UpdateDashboardCounts()
-        {
-            await Clients.All.SendAsync("UpdateDashboardCounts");
-        }
-
-        public async Task ForceLogoutAccount(string accountId, string? reason = null)
-        {
-            await Clients.Group($"account_{accountId}")
-                .SendAsync("ForceLogout", new { reason = reason ?? "account_deleted" });
-        public async Task NotifyCreateCategory(string message)
-        {
-            await Clients.All.SendAsync("ReceiveCreateCategoryNotification", message);
-        }
+        
 
         private static string BuildArticleUpdatedMsg(NewsArticle art, string updaterName)
         {
             var title = string.IsNullOrWhiteSpace(art.NewsTitle) ? (art.Headline ?? "(No title)") : art.NewsTitle;
-            return $" Article updated: {title} — by {updaterName} at {DateTime.Now:HH:mm dd/MM}.";
+            return $" Article updated: {title} â€” by {updaterName} at {DateTime.Now:HH:mm dd/MM}.";
         }
 
         private static string BuildArticleDeletedMsg(NewsArticle art, string actorName)
         {
             var title = string.IsNullOrWhiteSpace(art.NewsTitle) ? (art.Headline ?? "(No title)") : art.NewsTitle;
-            return $" Article deleted: {title} — by {actorName} at {DateTime.Now:HH:mm dd/MM}.";
+            return $" Article deleted: {title} â€” by {actorName} at {DateTime.Now:HH:mm dd/MM}.";
         }
-
     }
 }

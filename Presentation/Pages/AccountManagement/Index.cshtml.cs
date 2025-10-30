@@ -28,8 +28,8 @@ namespace Presentation.Pages.AccountManagement
             var account = _acc.Get(id);
             if (account == null) return NotFound();
 
-            // Notify all clients (some might not be in the group yet)
             await _hub.Clients.All.SendAsync("AccountDeactivated", id.ToString());
+
             
             // Delete the account
             _acc.Delete(id);
