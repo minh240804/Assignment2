@@ -53,7 +53,7 @@
 
                             <!-- Article Title -->
                             <h5 class="card-title fw-bold">
-                                <a asp-page="/NewsArticle/Details" asp-route-id="@article.NewsArticleId" 
+                                <a asp-page="/NewsArticleManagement/Details" asp-route-id="@article.NewsArticleId" 
                                    class="text-decoration-none text-dark">
                                     @article.NewsTitle
                                 </a>
@@ -105,7 +105,7 @@
                         </div>
                         
                         <div class="card-footer bg-transparent border-top-0">
-                            <a asp-page="/NewsArticle/Details" asp-route-id="@article.NewsArticleId" 
+                            <a asp-page="/NewsArticleManagement/Details" asp-route-id="@article.NewsArticleId"
                                class="btn btn-primary w-100">
                                 <i class="bi bi-eye"></i> View Details
                             </a>
@@ -179,7 +179,10 @@
 
 @section Scripts {
     <script src="~/lib/signalr/dist/browser/signalr.min.js"></script>
+
     <script>
+
+
         // Initialize SignalR for real-time updates
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/notificationHub")
@@ -211,5 +214,10 @@
         connection.start()
             .then(() => console.log('SignalR Connected on Index page'))
             .catch(err => console.error('SignalR Error:', err));
+
+
+
+
+
     </script>
 }

@@ -1,4 +1,4 @@
-@page
+﻿@page
 @model Presentation.Pages.AccountManagement.IndexModel
 
 <h1>Account Management</h1>
@@ -106,18 +106,66 @@
     </div>
 </div>
 
+<script>window.isAccountsList = true;</script>
+
 @section Scripts {
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
     <script>
+
         function showCreateForm() {
-            $('#formModal .modal-content').load('/AccountManagement/Form', function() {
-                $('#formModal').modal('show');
-            });
+          $('#formModal .modal-content').load('/AccountManagement/Form?IsModal=true', function () {
+            $('#formModal').modal('show');
+            $.validator.unobtrusive.parse('#formModal'); // kích hoạt lại validate
+          });
         }
 
         function showEditForm(id) {
-            $('#formModal .modal-content').load('/AccountManagement/Form/' + id, function() {
-                $('#formModal').modal('show');
-            });
+          $('#formModal .modal-content').load('/AccountManagement/Form/' + id + '?IsModal=true', function () {
+            $('#formModal').modal('show');
+            $.validator.unobtrusive.parse('#formModal');
+          });
         }
+
+        // 🔴 BẮT SUBMIT FORM TRONG MODAL BẰNG AJAX
+        $(document).on('submit', '#formModal form[data-modal="true"]', function (e) {
+          e.preventDefault();
+          const $form = $(this);
+
+          // client-side validate
+          if (!$form.valid()) return;
+
+          $.ajax({
+            url: $form.attr('action'),
+            type: 'POST',
+            data: $form.serialize(), // chứa AntiForgery + IsModal=true
+            success: function (res, status, xhr) {
+              // Nếu server trả JSON { success: true } => đóng modal + refresh list
+              const ct = xhr.getResponseHeader('Content-Type') || '';
+              if (ct.includes('application/json') && res && res.success) {
+                $('#formModal').modal('hide');
+                // TODO: refresh bảng (load lại trang hoặc reload partial)
+                location.reload(); // tạm thời reload trang
+                return;
+              }
+              // Nếu server trả lại HTML (ModelState invalid) => render lại vào modal
+              $('#formModal .modal-content').html(res);
+              $.validator.unobtrusive.parse('#formModal');
+            },
+            error: function (xhr) {
+              $('#formModal .modal-content').html(xhr.responseText || '<div class="p-3 text-danger">Unexpected error.</div>');
+              $.validator.unobtrusive.parse('#formModal');
+            }
+          });
+        });
+ 
+
+
+
+
+
+
     </script>
 }

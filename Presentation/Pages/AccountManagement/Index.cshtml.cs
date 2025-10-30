@@ -31,7 +31,6 @@ namespace Presentation.Pages.AccountManagement
             await _hub.Clients.All.SendAsync("AccountDeactivated", id.ToString());
 
             
-            // Delete the account
             _acc.Delete(id);
             
             TempData["SuccessMessage"] = "Account deleted successfully.";
@@ -84,27 +83,6 @@ namespace Presentation.Pages.AccountManagement
             return Page();
         }
 
-        //public async Task<IActionResult> OnPostDelete(short id)
-        //{
-        //    if (!IsAdmin()) return Unauthorized();
-
-        //    var result = _acc.Delete(id);
-
-        //    if (result.Success)
-        //    {
-        //        TempData["SuccessMessage"] = result.Message;
-
-        //        await _hub.Clients.Group($"account_{id}")
-        //            .SendAsync("ForceLogout", new { reason = "account_deleted" });
-
-        //        await _hub.Clients.All.SendAsync("AccountDeleted", id);
-        //    }
-        //    else
-        //    {
-        //        TempData["ErrorMessage"] = result.Message;
-        //    }
-
-        //    return RedirectToPage();
-        //}
+        
     }
 }

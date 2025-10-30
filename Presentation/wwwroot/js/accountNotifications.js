@@ -16,7 +16,6 @@ function debounce(fn, ms) {
 }
 const debouncedReload = debounce(() => location.reload(), 300);
 
-// Start (guard không start trùng)
 async function startSignalRConnection(accountId) {
     try {
         if (connection.state === "Disconnected") {
@@ -98,10 +97,9 @@ async function unregisterRoleThenStop() {
 window.unregisterRoleThenStop = unregisterRoleThenStop;
 
 /* =========================
-   4) Handlers từ server
    ========================= */
 
-// Tạo account mới (ví dụ chỉ Staff thấy như bạn đã set trước đó)
+
 connection.on("ReceiveNewAccountNotification", function (message) {
     // 0=Admin, 1=Staff, 2=Lecturer (theo mapping bạn đang dùng)
     if (window.userRole === 1) {
@@ -110,28 +108,29 @@ connection.on("ReceiveNewAccountNotification", function (message) {
     }
 });
 
-// Publish bài mới — server có thể gửi 1 param (message) hoặc 2 param (authorName, articleTitle)
-// Hỗ trợ cả 2 dạng:
-connection.on("NewArticlePublished", function (...args) {
-    let text;
-    if (args.length >= 2) {
-        const [authorName, articleTitle] = args;
-        text = `New article: ${articleTitle} — by ${authorName}`;
-    } else {
-        text = args[0] || "New article published";
-    }
-    if (window.toastr) toastr.success(text);
-    else console.log("[Toast]", text);
 
-    // Nếu đang ở trang danh sách thì tự reload
+connection.on("NewArticlePublished", function (message) {
     try {
         if (window.isNewsList) {
-            debouncedReload();
+            sessionStorage.setItem('postReloadToast', message); // <-- lưu
+            debouncedReload(); // ví dụ: location.reload();
+            return;
         }
     } catch (e) { console.error(e); }
+
+    toastr.info(message);
 });
 
-// Cập nhật bài — nếu đang xem bài đó hoặc đang ở list -> reload
+document.addEventListener('DOMContentLoaded', function () {
+    const msg = sessionStorage.getItem('postReloadToast');
+    if (msg) {
+        sessionStorage.removeItem('postReloadToast');
+        toastr.info(msg); 
+    }
+});
+
+
+
 connection.on("UpdateNewsArticle", function (articleId) {
     try {
         const sameArticle = String(window.currentArticleId || "") === String(articleId);
@@ -141,23 +140,22 @@ connection.on("UpdateNewsArticle", function (articleId) {
     } catch (e) { console.error(e); }
 });
 
-// Cập nhật nội dung bài cho viewers đang trong group bài (toast nhẹ)
 connection.on("ArticleUpdated", function (articleId, title /*, content */) {
     if (window.toastr) toastr.info(`Article updated: ${title || articleId}`);
     else console.log("[Toast] Article updated:", title || articleId);
 });
 
-// Xóa bài — cảnh báo và nếu đang ở trang bài đó thì quay về index
 connection.on("ArticleDeleted", function (articleId, title) {
-    const msg = `Article deleted: ${title || articleId}`;
+    const msg = `Article deleted: ${title}  || ${articleId}`;
     if (window.toastr) toastr.warning(msg);
     else console.log("[Toast]", msg);
 
+    console.log(window.currentArticleId);
+
     const sameArticle = String(window.currentArticleId || "") === String(articleId);
-    if (sameArticle) window.location.href = "/NewsArticleManagement/Index";
+    if (sameArticle) window.location.href = "/";
 });
 
-// Deactivate account — nếu là account hiện tại thì logout
 connection.on("AccountDeactivated", function (accountId) {
     const currentId = parseInt(window.currentAccountId);
     const deactivatedId = parseInt(accountId);
@@ -165,7 +163,7 @@ connection.on("AccountDeactivated", function (accountId) {
 
     if (currentId === deactivatedId) {
         if (window.toastr) {
-            toastr.warning("Your account has been deactivated", null, {
+            toastr.warning("Your account has been deactivated or update.", null, {
                 timeOut: 0, extendedTimeOut: 0, closeButton: true, tapToDismiss: false
             });
         }
@@ -177,7 +175,6 @@ connection.on("AccountDeactivated", function (accountId) {
     }
 });
 
-// ForceLogout theo group account
 connection.on("ForceLogout", function (payload) {
     if (window.toastr) {
         toastr.warning("You have been logged out: " + (payload?.reason || "forced"));
@@ -191,15 +188,18 @@ connection.on("ForceLogout", function (payload) {
     form.submit();
 });
 
-// Thông báo tạo Category
 connection.on("ReceiveCreateCategoryNotification", function (message) {
     console.log("[SR] CreateCategory:", message);
     if (window.toastr) toastr.info(message);
     else console.log("[Toast]", message);
 });
 
+
+
+
+
+
 /* =========================
-   5) Lifecycle logs & re-register
    ========================= */
 connection.onreconnecting(err => console.warn("[SR] reconnecting:", err, "state:", connection.state));
 connection.onreconnected(async () => {

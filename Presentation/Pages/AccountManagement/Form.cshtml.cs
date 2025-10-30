@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Assignment2.BusinessLogic;
 using Assignment2.DataAccess.Models;
-using System.Linq;
 using Microsoft.AspNetCore.SignalR;
 using Presentation.Hubs;
 using System.ComponentModel.DataAnnotations;
@@ -10,7 +9,8 @@ using System.Text.RegularExpressions;
 
 namespace Presentation.Pages.AccountManagement
 {
-    [IgnoreAntiforgeryToken]
+    // Dùng ValidateAntiForgeryToken thay vì Ignore
+    [ValidateAntiForgeryToken]
     public class FormModel : PageModel
     {
         private readonly IAccountService _acc;
@@ -48,13 +48,15 @@ namespace Presentation.Pages.AccountManagement
             {
                 var existingAccount = _acc.Get(id.Value);
                 if (existingAccount == null) return NotFound();
+
                 Account = new SystemAccount
                 {
                     AccountId = existingAccount.AccountId,
                     AccountName = existingAccount.AccountName,
                     AccountEmail = existingAccount.AccountEmail,
                     AccountRole = existingAccount.AccountRole,
-                    AccountPassword = existingAccount.AccountPassword
+                    AccountPassword = existingAccount.AccountPassword,
+                    AccountStatus = existingAccount.AccountStatus
                 };
             }
 
@@ -67,31 +69,38 @@ namespace Presentation.Pages.AccountManagement
 
             IsCreate = Account.AccountId == 0;
 
-            // Chuẩn hoá input
+            // Normalize
             Account.AccountName = (Account.AccountName ?? string.Empty).Trim();
             Account.AccountEmail = (Account.AccountEmail ?? string.Empty).Trim().ToLowerInvariant();
             Password = (Password ?? string.Empty).Trim();
 
-            // Không cho đổi email khi update
+            // Keep email unchanged on edit
             if (!IsCreate)
             {
                 var existing = _acc.Get(Account.AccountId);
                 if (existing == null) return NotFound();
-                Account.AccountEmail = existing.AccountEmail; // giữ nguyên email cũ
+                Account.AccountEmail = existing.AccountEmail;
             }
 
             ValidateAccount(IsCreate);
+
+            // >>> Stop here if any validation errors (prevents processing) <<<
+            if (!ModelState.IsValid)
+            {
+                // Khi dùng modal partial, trả Page() để render lại form + lỗi
+                return Page();
+            }
 
             try
             {
                 if (IsCreate)
                 {
                     _acc.Add(Account, Password);
-                    //await _hubContext.Clients.Group("Admin").SendAsync("ReceiveNewAccountNotification",
-                    //    $"Admin has added a new account: {Account.AccountName}");
-                    
-                    await _hubContext.Clients.Group("Staff").SendAsync("ReceiveNewAccountNotification",
-                        $"Admin has added a new account: {Account.AccountName}");
+
+                    await _hubContext.Clients.Group("Staff")
+                        .SendAsync("ReceiveNewAccountNotification",
+                            $"Admin has added a new account: {Account.AccountName}");
+
                     TempData["SuccessMessage"] = "Account created successfully.";
                 }
                 else
@@ -104,77 +113,85 @@ namespace Presentation.Pages.AccountManagement
 
                     if (!Account.AccountStatus && existing.AccountStatus)
                     {
-                        await _hubContext.Clients.All.SendAsync("AccountDeactivated", Account.AccountId.ToString());
+                        await _hubContext.Clients.All
+                            .SendAsync("AccountDeactivated", Account.AccountId.ToString());
                     }
 
                     existing.AccountStatus = Account.AccountStatus;
                     _acc.Update(existing);
+
                     TempData["SuccessMessage"] = "Account updated successfully.";
                 }
 
                 if (IsModal) return new JsonResult(new { success = true });
                 return RedirectToPage("Index");
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                ModelState.AddModelError("", "An error occurred: " + ex.Message);
-                return IsModal ? Page() : Page();
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred: " + ex.Message);
+                return Page();
             }
         }
 
-
         private void ValidateAccount(bool isCreate)
         {
-            if (_acc.ExistsEmail(Account.AccountEmail))
+            // Email duplicate: chỉ check khi tạo mới (vì khi edit giữ nguyên email)
+            if (isCreate && _acc.ExistsEmail(Account.AccountEmail))
             {
-                ModelState.AddModelError(nameof(Account.AccountEmail), "Email đã tồn tại.");
+                ModelState.AddModelError(nameof(Account.AccountEmail), "Email already exists.");
             }
 
+            // Name
             if (string.IsNullOrWhiteSpace(Account.AccountName))
-                ModelState.AddModelError(nameof(Account.AccountName), "Name là bắt buộc.");
+            {
+                ModelState.AddModelError(nameof(Account.AccountName), "Name is required.");
+            }
             else
             {
                 if (Account.AccountName.Length > 100)
-                    ModelState.AddModelError(nameof(Account.AccountName), "Name tối đa 100 ký tự.");
+                    ModelState.AddModelError(nameof(Account.AccountName), "Name must not exceed 100 characters.");
 
-                // Cho phép chữ có dấu, số và 1 số ký tự thông dụng
-                var nameRegex = new Regex(@"^[\p{L}\p{M}0-9 .,'\-_/()]+$");
+                var nameRegex = new Regex(@"^[\p{L}\p{M}0-9 .,'\-/_/()]+$");
                 if (!nameRegex.IsMatch(Account.AccountName))
-                    ModelState.AddModelError(nameof(Account.AccountName), "Name chỉ chứa chữ, số và một số ký tự thông dụng.");
+                    ModelState.AddModelError(nameof(Account.AccountName),
+                        "Name may contain letters, digits, spaces, and common punctuation only.");
             }
 
+            // Email
             if (string.IsNullOrWhiteSpace(Account.AccountEmail))
-                ModelState.AddModelError(nameof(Account.AccountEmail), "Email là bắt buộc.");
+            {
+                ModelState.AddModelError(nameof(Account.AccountEmail), "Email is required.");
+            }
             else
             {
                 var emailAttr = new EmailAddressAttribute();
                 if (!emailAttr.IsValid(Account.AccountEmail))
-                    ModelState.AddModelError(nameof(Account.AccountEmail), "Email không hợp lệ.");
+                    ModelState.AddModelError(nameof(Account.AccountEmail), "Email format is invalid.");
                 if (Account.AccountEmail.Length > 150)
-                    ModelState.AddModelError(nameof(Account.AccountEmail), "Email tối đa 150 ký tự.");
+                    ModelState.AddModelError(nameof(Account.AccountEmail), "Email must not exceed 150 characters.");
             }
 
-            // Role: required (1 hoặc 2)
+            // Role: 1 or 2
             if (Account.AccountRole != 1 && Account.AccountRole != 2)
-                ModelState.AddModelError(nameof(Account.AccountRole), "Role không hợp lệ. Hãy chọn Staff hoặc Lecturer.");
+                ModelState.AddModelError(nameof(Account.AccountRole), "Please select a valid role (Staff or Lecturer).");
 
-            // Password: bắt buộc khi tạo mới; tối thiểu 6 ký tự
             if (isCreate)
             {
                 if (string.IsNullOrWhiteSpace(Password))
-                    ModelState.AddModelError(nameof(Password), "Password là bắt buộc khi tạo mới.");
+                {
+                    ModelState.AddModelError(nameof(Password), "Password is required.");
+                }
                 else
                 {
                     if (Password.Length < 6)
-                        ModelState.AddModelError(nameof(Password), "Password cần tối thiểu 6 ký tự.");
+                        ModelState.AddModelError(nameof(Password), "Password must be at least 6 characters.");
 
-                    // (Tuỳ chọn) Bật rule mạnh hơn: ít nhất 1 chữ hoa, 1 chữ thường, 1 số
                     var strong = new Regex(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,100}$");
                     if (!strong.IsMatch(Password))
-                        ModelState.AddModelError(nameof(Password), "Password nên có chữ hoa, chữ thường và số để đảm bảo an toàn.");
+                        ModelState.AddModelError(nameof(Password),
+                            "Use a stronger password with upper/lowercase letters and digits.");
                 }
             }
         }
-        
     }
 }
