@@ -122,7 +122,7 @@ namespace Presentation.Pages.NewsArticleManagement
                 {
                     eventType = "delete",
                     entityType = "article",
-                    message = $"Article deleted: \"{articleToDelete.NewsTitle}\"",
+                    message = $"Article deleted: \"{article.NewsTitle}\"",
                     timestamp = DateTime.Now
                 });
 
