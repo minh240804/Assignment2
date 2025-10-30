@@ -6,12 +6,10 @@ namespace Presentation.Hubs
 {
     public class NotificationHub : Hub
     {
-        // Tên group theo vai trò
         private const string Group_Admin = "Admin";
         private const string Group_Staff = "Staff";
         private const string Group_Lecturer = "Lecturer";
 
-        // Map số role -> tên group
         private static string? MapRole(int role) => role switch
         {
             0 => Group_Admin,
@@ -20,16 +18,14 @@ namespace Presentation.Hubs
             _ => null
         };
 
-        // Lấy role từ Claims (ưu tiên ClaimTypes.Role; fallback "Role")
         private static string? GetRoleGroupFromContext(HubCallerContext ctx)
         {
             var roleStr = ctx.User?.FindFirst(ClaimTypes.Role)?.Value
-                          ?? ctx.User?.FindFirst("Role")?.Value; // nếu bạn tự lưu claim "Role"
+                          ?? ctx.User?.FindFirst("Role")?.Value; 
             if (!int.TryParse(roleStr, out var role)) return null;
             return MapRole(role);
         }
 
-        // Tự join group theo claim nếu có
         public override async Task OnConnectedAsync()
         {
             var roleGroup = GetRoleGroupFromContext(Context);
@@ -40,7 +36,6 @@ namespace Presentation.Hubs
             await base.OnConnectedAsync();
         }
 
-        // Tự rời group theo claim nếu có
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             var roleGroup = GetRoleGroupFromContext(Context);
@@ -51,18 +46,16 @@ namespace Presentation.Hubs
             await base.OnDisconnectedAsync(exception);
         }
 
-        // ====== APIs client sẽ invoke sau login/logout ======
-
-        // Join group theo ROLE (được client gọi trong registerRoleAndAccount)
+        
         public async Task<string> RegisterUserRole(int role)
         {
             var grp = MapRole(role);
             if (!string.IsNullOrEmpty(grp))
                 await Groups.AddToGroupAsync(Context.ConnectionId, grp);
-            return grp ?? string.Empty; // ACK cho client log
+            return grp ?? string.Empty;
         }
 
-        // Rời group theo ROLE (được client gọi trước khi logout)
+       
         public async Task UnregisterUserRole(int role)
         {
             var grp = MapRole(role);
@@ -70,15 +63,13 @@ namespace Presentation.Hubs
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, grp);
         }
 
-        // Join group theo ACCOUNT (để force logout đúng người dùng)
         public async Task<string> RegisterConnection(string accountId)
         {
             var grp = $"account_{accountId}";
             await Groups.AddToGroupAsync(Context.ConnectionId, grp);
-            return grp; // ACK cho client log
+            return grp; 
         }
 
-        // Join/Leave group theo ARTICLE (realtime viewers)
         public Task JoinArticleGroup(string articleId)
             => Groups.AddToGroupAsync(Context.ConnectionId, $"article_{articleId}");
         public async Task JoinDashboardGroup()
@@ -105,9 +96,6 @@ namespace Presentation.Hubs
         public Task LeaveArticleGroup(string articleId)
             => Groups.RemoveFromGroupAsync(Context.ConnectionId, $"article_{articleId}");
 
-        // ====== Broadcast helpers cho nghiệp vụ ======
-
-        // Accounts
         public Task NotifyNewAccount(string accName)
             => Clients.Group(Group_Admin)
                       .SendAsync("ReceiveNewAccountNotification", $"Admin has added a new account: {accName}");

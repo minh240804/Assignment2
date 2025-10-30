@@ -5,7 +5,7 @@ using Assignment2.BusinessLogic;
 using Assignment2.DataAccess.Models;
 using Presentation.Hubs;
 
-namespace Presentation.Pages.NewsArticle
+namespace Presentation.Pages.NewsArticleManagement
 {
     [IgnoreAntiforgeryToken]
     public class DetailsModel : PageModel
@@ -27,8 +27,8 @@ namespace Presentation.Pages.NewsArticle
             _hubContext = hubContext;
         }
 
-        public Assignment2.DataAccess.Models.NewsArticle? Article { get; set; }
-        public List<Assignment2.DataAccess.Models.NewsArticle> RelatedArticles { get; set; } = new();
+        public NewsArticle? Article { get; set; }
+        public List<NewsArticle> RelatedArticles { get; set; } = new();
         public List<Comment> Comments { get; set; } = new();
         public string CurrentUserName { get; set; } = "Guest";
         public bool IsLoggedIn { get; set; }
@@ -43,7 +43,7 @@ namespace Presentation.Pages.NewsArticle
             }
 
             Article = _newsArticleService.Get(id);
-            
+
             if (Article == null)
             {
                 return NotFound();
@@ -60,11 +60,11 @@ namespace Presentation.Pages.NewsArticle
             // Check if user is logged in and get their info
             var accountId = _httpContextAccessor.HttpContext?.Session.GetInt32("AccountId");
             var role = _httpContextAccessor.HttpContext?.Session.GetInt32("Role");
-            
+
             IsLoggedIn = accountId.HasValue;
             IsAdmin = role.HasValue && role.Value == 0; // Role 0 is Admin
             CurrentUserId = (short)(accountId ?? 0);
-            
+
             if (IsLoggedIn)
             {
                 CurrentUserName = _httpContextAccessor.HttpContext?.Session.GetString("Name") ?? "User";
@@ -78,21 +78,21 @@ namespace Presentation.Pages.NewsArticle
             // Check if user is logged in
             var accountId = _httpContextAccessor.HttpContext?.Session.GetInt32("AccountId");
             var role = _httpContextAccessor.HttpContext?.Session.GetInt32("Role");
-            
+
             if (!accountId.HasValue)
             {
-                return new JsonResult(new { success = false, error = "You must be logged in to comment" }) 
-                { 
-                    StatusCode = 401 
+                return new JsonResult(new { success = false, error = "You must be logged in to comment" })
+                {
+                    StatusCode = 401
                 };
             }
 
             // Admins cannot comment - only moderate
             if (role.HasValue && role.Value == 0)
             {
-                return new JsonResult(new { success = false, error = "Admins cannot post comments" }) 
-                { 
-                    StatusCode = 403 
+                return new JsonResult(new { success = false, error = "Admins cannot post comments" })
+                {
+                    StatusCode = 403
                 };
             }
 
@@ -114,7 +114,7 @@ namespace Presentation.Pages.NewsArticle
                 {
                     commentId = newComment.CommentId,
                     user = userName,
-                    message = message,
+                    message,
                     timestamp = timestamp.ToString("HH:mm:ss dd/MM/yyyy")
                 });
 
@@ -132,7 +132,7 @@ namespace Presentation.Pages.NewsArticle
                 success = true,
                 commentId = newComment.CommentId,
                 user = userName,
-                message = message,
+                message,
                 timestamp = timestamp.ToString("HH:mm:ss dd/MM/yyyy")
             });
         }
@@ -147,9 +147,9 @@ namespace Presentation.Pages.NewsArticle
                 
                 if (!accountId.HasValue || !role.HasValue || role.Value != 0)
                 {
-                    return new JsonResult(new { success = false, error = "Only admins can delete comments" }) 
-                    { 
-                        StatusCode = 403 
+                    return new JsonResult(new { success = false, error = "Only admins can delete comments" })
+                    {
+                        StatusCode = 403
                     };
                 }
 
@@ -175,8 +175,8 @@ namespace Presentation.Pages.NewsArticle
                     .Group($"account_{authorId}")
                     .SendAsync("CommentDeleted", new
                     {
-                        commentId = commentId,
-                        articleId = articleId,
+                        commentId,
+                        articleId,
                         reason = $"Your comment was removed by {adminName} for violating community guidelines",
                         deletedBy = adminName,
                         timestamp = DateTime.Now.ToString("HH:mm:ss dd/MM/yyyy")
@@ -187,7 +187,7 @@ namespace Presentation.Pages.NewsArticle
                     .Group($"article_{articleId}")
                     .SendAsync("CommentRemovedFromArticle", new
                     {
-                        commentId = commentId,
+                        commentId,
                         message = "A comment was removed by moderator"
                     });
 
@@ -204,7 +204,7 @@ namespace Presentation.Pages.NewsArticle
                 {
                     success = true,
                     message = "Comment deleted successfully",
-                    commentId = commentId
+                    commentId
                 });
             }
             catch (Exception ex)
@@ -212,7 +212,7 @@ namespace Presentation.Pages.NewsArticle
                 // Log the error
                 Console.WriteLine($"Error deleting comment: {ex.Message}");
                 Console.WriteLine($"Stack trace: {ex.StackTrace}");
-                
+
                 return new JsonResult(new
                 {
                     success = false,

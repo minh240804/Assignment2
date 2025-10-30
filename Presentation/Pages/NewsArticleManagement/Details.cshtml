@@ -1,9 +1,14 @@
 ﻿@page "{id}"
-@model Presentation.Pages.NewsArticle.DetailsModel
+@model Presentation.Pages.NewsArticleManagement.DetailsModel
 @{
     ViewData["Title"] = Model.Article?.NewsTitle ?? "Article Details";
 }
 
+
+@* @{ *@
+@*     var id = RouteData.Values["id"]; *@
+@* } *@
+@* <p>ID: @id</p> *@
 <div class="container mt-4">
     @if (Model.Article == null)
     {
@@ -207,7 +212,7 @@
                             {
                                 @foreach (var related in Model.RelatedArticles)
                                 {
-                                    <a asp-page="/NewsArticle/Details" asp-route-id="@related.NewsArticleId" 
+                                    <a asp-page="/NewsArticleManagement/Details" asp-route-id="@related.NewsArticleId"
                                        class="list-group-item list-group-item-action">
                                         <h6 class="mb-1">@related.NewsTitle</h6>
                                         <small class="text-muted">
@@ -251,6 +256,7 @@
 @section Scripts {
     <script src="~/js/comment-system.js" asp-append-version="true"></script>
     <script>
+         window.currentArticleId = '@(Model.Article?.NewsArticleId?.ToString() ?? "")';
         // Initialize comment system with configuration
         window.initCommentSystem({
             articleId: '@Model.Article?.NewsArticleId',

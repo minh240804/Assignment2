@@ -14,7 +14,6 @@
 
     <!-- SignalR 8.x (duy nhất) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
-    
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
@@ -57,6 +56,9 @@
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-page="/CategoryManagement/Index">Category</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-page="/NewsArticleManagement/Index">News Article Management</a>
                                 </li>
                             }
 
@@ -113,8 +115,7 @@
     <script src="~/js/accountNotifications.js" asp-append-version="true"></script>
 
     <script>
-        // ====== Globals từ Session ======
-        window.userRole = @(role ?? -1); // 0=Admin,1=Staff,2=Lecturer
+        window.userRole = @(role ?? -1); 
         window.currentAccountId = @(HttpContextAccessor.HttpContext?.Session.GetInt32("AccountId") ?? -1);
 
         console.log("[SR] Globals -> role:", window.userRole, "accountId:", window.currentAccountId);
@@ -133,7 +134,6 @@
             console.log("[SR] Not starting SignalR (anonymous user).");
         }
 
-        // ====== Logout: rời group rồi mới submit ======
         (function wireLogoutInterceptor() {
             const logoutForm = document.getElementById('logoutForm');
             const logoutBtn  = document.getElementById('logoutBtn');
@@ -144,7 +144,7 @@
             logoutBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 (async () => {
-                    await unregisterRoleThenStop(); // defined in accountNotifications.js
+                    await unregisterRoleThenStop(); 
                     logoutForm.submit();
                 })();
             });
