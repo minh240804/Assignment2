@@ -13,7 +13,6 @@ connection.on("ReceiveNewAccountNotification", function (message) {
 
 connection.on("NewArticlePublished", function (message) {
         toastr.info(message);
-    
 });
 
 connection.on("AccountDeactivated", function (accountId) {
@@ -65,9 +64,24 @@ connection.on("UpdateNewsArticle", function (articleId) {
 
 connection.on("ReceiveCreateCategoryNotification", function (message) {
     // show to all users
-    console.log(message);
     toastr.info(message);
 });
+
+connection.on("ReloadCategoryList", function () {
+    console.log("[SR] ReloadCategoryList received");
+    try {
+        if (window.isCategoryList) {
+            if (typeof debounce === "function") {
+                debounce(() => location.reload(), 300)();
+            } else {
+                setTimeout(() => location.reload(), 300);
+            }
+        }
+    } catch (e) {
+        console.error("[SR] Error during ReloadCategoryList:", e);
+    }
+});
+
 
 // Function to start the connection and register the current user's connection
 async function startSignalRConnection(accountId) {

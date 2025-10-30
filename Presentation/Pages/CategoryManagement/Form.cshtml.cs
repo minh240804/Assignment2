@@ -112,6 +112,7 @@ namespace Presentation.Pages.CategoryManagement
                 }
                 _hubContext.Clients.All.SendAsync("ReceiveCreateCategoryNotification",
                     $"A category has been updated: {Category.CategoryName}");
+                _hubContext.Clients.All.SendAsync("ReloadCategoryList");
             }
 
             return RedirectToPage("Index"); ;
