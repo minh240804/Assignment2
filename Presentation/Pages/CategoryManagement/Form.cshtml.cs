@@ -102,7 +102,7 @@ namespace Presentation.Pages.CategoryManagement
 
             var find = _cats.GetAll()
                 .FirstOrDefault(c => c.CategoryName.Equals(Category.CategoryName, StringComparison.OrdinalIgnoreCase));
-            if(find != null)
+            if(find != null && Category.CategoryId == 0)
             {
                 ModelState.AddModelError(nameof(Category.CategoryName), "Category name already exists.");
             }
