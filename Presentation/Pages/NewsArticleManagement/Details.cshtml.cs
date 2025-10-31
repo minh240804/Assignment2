@@ -14,17 +14,20 @@ namespace Presentation.Pages.NewsArticleManagement
         private readonly IArticleCommentService _commentService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IArticleRecommendationService _recommendationService;
 
         public DetailsModel(
             INewsArticleService newsArticleService,
             IArticleCommentService commentService,
             IHttpContextAccessor httpContextAccessor,
-            IHubContext<NotificationHub> hubContext)
+            IHubContext<NotificationHub> hubContext,
+            IArticleRecommendationService recommendationService)
         {
             _newsArticleService = newsArticleService;
             _commentService = commentService;
             _httpContextAccessor = httpContextAccessor;
             _hubContext = hubContext;
+            _recommendationService = recommendationService;
         }
 
         public NewsArticle? Article { get; set; }
@@ -49,10 +52,19 @@ namespace Presentation.Pages.NewsArticleManagement
                 return NotFound();
             }
 
-            // Get related articles
-            RelatedArticles = _newsArticleService
-                .GetRelatedArticles(id, Article.CategoryId, 3)
-                .ToList();
+            // Get AI-powered related articles based on content similarity
+            try
+            {
+                RelatedArticles = _recommendationService.GetSimilarArticles(id, 3);
+            }
+            catch (Exception ex)
+            {
+                // Fallback to basic category/tag matching if AI fails
+                Console.WriteLine($"AI recommendation failed: {ex.Message}. Using fallback.");
+                RelatedArticles = _newsArticleService
+                    .GetRelatedArticles(id, Article.CategoryId, 3)
+                    .ToList();
+            }
 
             // Load comments from database
             Comments = _commentService.GetByArticle(id).ToList();
@@ -104,22 +116,33 @@ namespace Presentation.Pages.NewsArticleManagement
             var userName = _httpContextAccessor.HttpContext?.Session.GetString("Name") ?? "User";
             var timestamp = DateTime.Now;
 
-            // Save comment to database
-            _commentService.Add(articleId, (short)accountId.Value, message);
+            // Save comment to database and get the created comment with ID
+            var newComment = _commentService.Add(articleId, (short)accountId.Value, message);
 
             // Send comment to all clients in the article group via SignalR
             await _hubContext.Clients
                 .Group($"article_{articleId}")
                 .SendAsync("ReceiveComment", new
                 {
+                    commentId = newComment.CommentId,
                     user = userName,
                     message,
                     timestamp = timestamp.ToString("HH:mm:ss dd/MM/yyyy")
                 });
 
+            // Notify dashboard about new comment
+            await _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+            {
+                eventType = "create",
+                entityType = "comment",
+                message = $"New comment by {userName} on article {articleId}",
+                timestamp = DateTime.Now
+            });
+
             return new JsonResult(new
             {
                 success = true,
+                commentId = newComment.CommentId,
                 user = userName,
                 message,
                 timestamp = timestamp.ToString("HH:mm:ss dd/MM/yyyy")
@@ -133,8 +156,8 @@ namespace Presentation.Pages.NewsArticleManagement
                 // Check if user is admin
                 var accountId = _httpContextAccessor.HttpContext?.Session.GetInt32("AccountId");
                 var role = _httpContextAccessor.HttpContext?.Session.GetInt32("Role");
-
-                if (!accountId.HasValue || role != 0)
+                
+                if (!accountId.HasValue || !role.HasValue || role.Value != 0)
                 {
                     return new JsonResult(new { success = false, error = "Only admins can delete comments" })
                     {
@@ -179,6 +202,15 @@ namespace Presentation.Pages.NewsArticleManagement
                         commentId,
                         message = "A comment was removed by moderator"
                     });
+
+                // Notify dashboard about comment deletion
+                await _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+                {
+                    eventType = "delete",
+                    entityType = "comment",
+                    message = $"Comment #{commentId} deleted by {adminName}",
+                    timestamp = DateTime.Now
+                });
 
                 return new JsonResult(new
                 {

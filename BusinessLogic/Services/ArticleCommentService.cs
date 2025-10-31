@@ -19,7 +19,7 @@ namespace Assignment2.BusinessLogic
 
         public Comment? Get(int id) => _repo.Get(id);
 
-        public void Add(string articleId, short accountId, string commentText)
+        public Comment Add(string articleId, short accountId, string commentText)
         {
             var comment = new Comment
             {
@@ -31,6 +31,9 @@ namespace Assignment2.BusinessLogic
             };
 
             _repo.Add(comment);
+            
+            // Return the comment with the generated ID
+            return comment;
         }
 
         public void Delete(int id, short? deletedBy)

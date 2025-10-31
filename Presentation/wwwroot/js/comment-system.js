@@ -25,13 +25,13 @@
 
         async function getConnection() {
             for (let i = 0; i < 30; i++) {
-                if (window.sharedSignalRConnection) {
-                    console.log('Connection found');
-                    return window.sharedSignalRConnection;
+                if (window.connection) {
+                    console.log('✅ Connection found');
+                    return window.connection;
                 }
                 await new Promise(r => setTimeout(r, 500));
             }
-            console.error('Connection timeout');
+            console.error('❌ Connection timeout');
             return null;
         }
 
@@ -43,8 +43,8 @@
 
             // SignalR event handlers
             conn.on("ReceiveComment", (data) => {
-                console.log('New comment from:', data.user);
-                addComment(data.user, data.message, data.timestamp);
+                console.log('💬 New comment from:', data.user, '| Message:', data.message.substring(0, 50));
+                addComment(data.commentId, data.user, data.message, data.timestamp);
             });
 
             conn.on("CommentDeleted", (data) => {
@@ -123,12 +123,14 @@
 
                     if (result.success) {
                         input.value = '';
+                        console.log('✅ Comment posted successfully');
                         showAlert('Comment posted!', 'success');
                     } else {
+                        console.error('❌ Post failed:', result.error);
                         showAlert(result.error || 'Failed', 'error');
                     }
                 } catch (err) {
-                    console.error('Post error:', err);
+                    console.error('❌ Post error:', err);
                     showAlert('Failed to post', 'error');
                 } finally {
                     if (btn) {
@@ -181,18 +183,18 @@
             }
 
             // Add comment to UI
-            function addComment(user, msg, time) {
+            function addComment(commentId, user, msg, time) {
                 const list = document.getElementById('commentsList');
                 const placeholder = list?.querySelector('.text-muted.text-center');
                 if (placeholder) placeholder.remove();
 
                 const div = document.createElement('div');
                 div.className = 'mb-3 p-3 bg-white rounded shadow-sm';
-                div.id = `comment-temp-${Date.now()}`;
+                div.id = `comment-${commentId}`;
 
                 const delBtn = isAdmin ? `
                     <button class="btn btn-sm btn-outline-danger delete-comment-btn ms-2" 
-                            data-comment-id="${div.id}">
+                            data-comment-id="${commentId}">
                         <i class="bi bi-trash"></i>
                     </button>` : '';
 

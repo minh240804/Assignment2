@@ -4,6 +4,7 @@ using Assignment2.DataAccess.DAO;
 using Assignment2.DataAccess.Repositories;
 using Assignment2.BusinessLogic;
 using Presentation.Hubs;
+using Presentation.Services;
 
 namespace Assignment2
 {
@@ -55,6 +56,16 @@ namespace Assignment2
             builder.Services.AddScoped<INewsArticleService, NewsArticleService>();
             builder.Services.AddScoped<ITagService, TagService>();
             builder.Services.AddScoped<IArticleCommentService, ArticleCommentService>();
+            builder.Services.AddScoped<IDashboardService, DashboardService>();
+            builder.Services.AddScoped<IDashboardNotificationService, DashboardNotificationService>();
+
+            // Register AI Recommendation Service (Scoped to work with scoped repositories)
+            builder.Services.AddScoped<IArticleRecommendationService>(sp =>
+            {
+                var articleRepo = sp.GetRequiredService<INewsArticleRepository>();
+                var modelPath = Path.Combine(builder.Environment.WebRootPath, "models", "ArticleSuggestionModel.zip");
+                return new ArticleRecommendationService(articleRepo, modelPath);
+            });
 
             // Configure Session
             builder.Services.AddDistributedMemoryCache();

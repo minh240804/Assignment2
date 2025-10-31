@@ -42,6 +42,15 @@ namespace Assignment2.DataAccess.DAO
 
         public void Delete(NewsArticle news)
         {
+            // First, delete all comments associated with this article
+            var comments = _ctx.Comments.Where(c => c.ArticleId == news.NewsArticleId).ToList();
+            if (comments.Any())
+            {
+                _ctx.Comments.RemoveRange(comments);
+                _ctx.SaveChanges(); // Save changes to delete comments first
+            }
+
+            // Then delete the article
             _ctx.NewsArticles.Remove(news);
             _ctx.SaveChanges();
         }
