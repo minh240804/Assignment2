@@ -96,11 +96,21 @@ namespace Presentation.Pages.AccountManagement
                 if (IsCreate)
                 {
                     _acc.Add(Account, Password);
-
-                    await _hubContext.Clients.Group("Staff")
-                        .SendAsync("ReceiveNewAccountNotification",
-                            $"Admin has added a new account: {Account.AccountName}");
-
+                    //await _hubContext.Clients.Group("Admin").SendAsync("ReceiveNewAccountNotification",
+                    //    $"Admin has added a new account: {Account.AccountName}");
+                    
+                    await _hubContext.Clients.Group("Staff").SendAsync("ReceiveNewAccountNotification",
+                        $"Admin has added a new account: {Account.AccountName}");
+                    
+                    // Notify dashboard
+                    await _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+                    {
+                        eventType = "create",
+                        entityType = "account",
+                        message = $"New account created: {Account.AccountName}",
+                        timestamp = DateTime.Now
+                    });
+                    
                     TempData["SuccessMessage"] = "Account created successfully.";
                 }
                 else
@@ -119,7 +129,16 @@ namespace Presentation.Pages.AccountManagement
 
                     existing.AccountStatus = Account.AccountStatus;
                     _acc.Update(existing);
-
+                    
+                    // Notify dashboard
+                    await _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+                    {
+                        eventType = "update",
+                        entityType = "account",
+                        message = $"Account updated: {Account.AccountName}",
+                        timestamp = DateTime.Now
+                    });
+                    
                     TempData["SuccessMessage"] = "Account updated successfully.";
                 }
 

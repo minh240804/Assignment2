@@ -112,9 +112,15 @@ namespace Presentation.Pages.CategoryManagement
                 _hubContext.Clients.All.SendAsync("ReloadCategoryList");
                 _hubContext.Clients.Group("Staff").SendAsync("ReceiveCreateCategoryNotification",
                     $"A new category has been created: {Category.CategoryName}");
-                _hubContext.Clients.Group("Admin").SendAsync("ReceiveCreateCategoryNotification",
-                    $"A new category has been created: {Category.CategoryName}");
-
+                
+                // Notify dashboard
+                _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+                {
+                    eventType = "create",
+                    entityType = "category",
+                    message = $"New category created: {Category.CategoryName}",
+                    timestamp = DateTime.Now
+                });
             }
             else
             {
@@ -132,9 +138,14 @@ namespace Presentation.Pages.CategoryManagement
                 _hubContext.Clients.All.SendAsync("ReloadCategoryList");
                 _hubContext.Clients.Group("Staff").SendAsync("ReceiveCreateCategoryNotification",
                     $"A new category has been created: {Category.CategoryName}");
-                _hubContext.Clients.Group("Admin").SendAsync("ReceiveCreateCategoryNotification",
-                    $"A new category has been created: {Category.CategoryName}");
-
+                // Notify dashboard
+                _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+                {
+                    eventType = "update",
+                    entityType = "category",
+                    message = $"Category updated: {Category.CategoryName}",
+                    timestamp = DateTime.Now
+                });
             }
 
             return RedirectToPage("Index"); ;

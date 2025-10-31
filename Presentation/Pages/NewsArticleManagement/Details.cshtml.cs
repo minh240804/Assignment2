@@ -116,22 +116,33 @@ namespace Presentation.Pages.NewsArticleManagement
             var userName = _httpContextAccessor.HttpContext?.Session.GetString("Name") ?? "User";
             var timestamp = DateTime.Now;
 
-            // Save comment to database
-            _commentService.Add(articleId, (short)accountId.Value, message);
+            // Save comment to database and get the created comment with ID
+            var newComment = _commentService.Add(articleId, (short)accountId.Value, message);
 
             // Send comment to all clients in the article group via SignalR
             await _hubContext.Clients
                 .Group($"article_{articleId}")
                 .SendAsync("ReceiveComment", new
                 {
+                    commentId = newComment.CommentId,
                     user = userName,
                     message,
                     timestamp = timestamp.ToString("HH:mm:ss dd/MM/yyyy")
                 });
 
+            // Notify dashboard about new comment
+            await _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+            {
+                eventType = "create",
+                entityType = "comment",
+                message = $"New comment by {userName} on article {articleId}",
+                timestamp = DateTime.Now
+            });
+
             return new JsonResult(new
             {
                 success = true,
+                commentId = newComment.CommentId,
                 user = userName,
                 message,
                 timestamp = timestamp.ToString("HH:mm:ss dd/MM/yyyy")
@@ -145,8 +156,8 @@ namespace Presentation.Pages.NewsArticleManagement
                 // Check if user is admin
                 var accountId = _httpContextAccessor.HttpContext?.Session.GetInt32("AccountId");
                 var role = _httpContextAccessor.HttpContext?.Session.GetInt32("Role");
-
-                if (!accountId.HasValue || role != 0)
+                
+                if (!accountId.HasValue || !role.HasValue || role.Value != 0)
                 {
                     return new JsonResult(new { success = false, error = "Only admins can delete comments" })
                     {
@@ -191,6 +202,15 @@ namespace Presentation.Pages.NewsArticleManagement
                         commentId,
                         message = "A comment was removed by moderator"
                     });
+
+                // Notify dashboard about comment deletion
+                await _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+                {
+                    eventType = "delete",
+                    entityType = "comment",
+                    message = $"Comment #{commentId} deleted by {adminName}",
+                    timestamp = DateTime.Now
+                });
 
                 return new JsonResult(new
                 {
