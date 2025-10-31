@@ -28,7 +28,7 @@
     <button class="btn btn-primary">Filter</button>
 </form>
 
-<a href="javascript:void(0)" class="btn btn-primary" onclick="showCreateForm()">Create New</a>
+<a href="javascript:void(0)" class="btn btn-primary" onclick="openCategoryCreate()">Create New</a>
 
 <table class="table table-bordered">
     <thead>
@@ -58,7 +58,7 @@
                     <td>@((c.IsActive ?? false) ? "Active" : "Inactive")</td>
                     <td>
                         <a href="javascript:void(0)" class="btn btn-sm btn-primary"
-                           onclick="showEditForm(@c.CategoryId)">Edit</a>
+                           onclick="openCategoryEdit(@c.CategoryId)">Edit</a>
                         <form method="post" asp-page-handler="Delete" asp-route-id="@c.CategoryId" class="d-inline">
                             <button type="submit"
                                     class="btn btn-sm btn-danger"
@@ -123,7 +123,7 @@
 }
 
 <!-- Modal for popup form -->
-<div id="formModal" class="modal fade" tabindex="-1">
+<div id="categoryModal" class="modal fade" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <!-- Form content will be loaded here -->
@@ -132,68 +132,68 @@
 </div>
 
 @section Scripts {
- <script>
-        function showCreateForm() {
-            $('#formModal .modal-content').load('/CategoryManagement/Form?IsModal=true', function() {
-                $('#formModal').modal('show');
-                $.validator.unobtrusive.parse('#formModal');
-            });
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        // Mở modal: nạp form qua AJAX
+        function openCategoryCreate() {
+          $('#categoryModal .modal-content').load('/CategoryManagement/Form?IsModal=true', function () {
+            $('#categoryModal').modal('show');
+            wireUpValidator($('#categoryModal form[data-ajax="true"]'));
+          });
+        }
+        function openCategoryEdit(id) {
+          $('#categoryModal .modal-content').load('/CategoryManagement/Form/' + id + '?IsModal=true', function () {
+            $('#categoryModal').modal('show');
+            wireUpValidator($('#categoryModal form[data-ajax="true"]'));
+          });
         }
 
-        function showEditForm(id) {
-            $('#formModal .modal-content').load('/CategoryManagement/Form/' + id + '?IsModal=true', function() {
-                $('#formModal').modal('show');
-                $.validator.unobtrusive.parse('#formModal');
-            });
+        // Hàm re-init unobtrusive + tắt inline error nếu muốn
+        function wireUpValidator($form) {
+          $form.removeData('validator').removeData('unobtrusiveValidation');
+          $.validator.unobtrusive.parse($form);
+
+          // (tuỳ chọn) chỉ hiện lỗi ở summary, không hiện dưới mỗi input
+          // const v = $form.data('validator');
+          // if (v) v.settings.errorPlacement = function(){};
         }
 
-        // 🔴 AJAX Submit Handler for Modal Forms
-        $(document).on('submit', '#formModal form[data-modal="true"]', function(e) {
-            e.preventDefault();
-            const $form = $(this);
+        // Chặn submit mặc định -> submit AJAX
+        $(document).on('submit', '#categoryModal form[data-ajax="true"]', function (e) {
+          e.preventDefault();
+          const $form = $(this);
+          if (!$form.valid()) return; // client-side invalid -> ở lại modal
 
-            // Client-side validation
-            if (!$form.valid()) return;
+          $.ajax({
+            url: $form.attr('action'),
+            type: 'POST',
+            data: $form.serialize(), // đã mang AntiForgery + IsModal
+            success: function (res, _s, xhr) {
+              const ct = (xhr.getResponseHeader('Content-Type') || '').toLowerCase();
 
-            // Show loading state
-            const $submitBtn = $form.find('button[type="submit"]');
-            const originalText = $submitBtn.html();
-            $submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Saving...');
+              // THÀNH CÔNG: server trả JSON { success: true }
+              if (ct.includes('application/json') && res && res.success) {
+                $('#categoryModal').modal('hide');
+                // refresh list: tạm thời reload trang
+                location.reload();
+                return;
+              }
 
-            $.ajax({
-                url: $form.attr('action'),
-                type: 'POST',
-                data: $form.serialize(),
-                success: function(res, status, xhr) {
-                    const ct = xhr.getResponseHeader('Content-Type') || '';
-
-                    // ✅ Success (JSON response)
-                    if (ct.includes('application/json') && res && res.success) {
-                        $('#formModal').modal('hide');
-                        location.reload(); // Reload to show updated list
-                        return;
-                    }
-
-                    // ❌ Validation Error (HTML response)
-                    $('#formModal .modal-content').html(res);
-                    $.validator.unobtrusive.parse('#formModal');
-                },
-                error: function(xhr) {
-                    const errorHtml = xhr.responseText || '<div class="p-3 text-danger">An unexpected error occurred.</div>';
-                    $('#formModal .modal-content').html(errorHtml);
-                    $.validator.unobtrusive.parse('#formModal');
-                },
-                complete: function() {
-                    $submitBtn.prop('disabled', false).html(originalText);
-                }
-            });
-        });
-
-        // Clear modal on hide
-        $('#formModal').on('hidden.bs.modal', function() {
-            $(this).find('.modal-content').html('');
+              // LỖI: server trả lại HTML fragment (Page())
+              $('#categoryModal .modal-content').html(res);
+              const $newForm = $('#categoryModal form[data-ajax="true"]');
+              wireUpValidator($newForm);
+              // Ép trigger để lỗi hiện ngay (nếu cần)
+              $newForm.validate().form();
+            },
+            error: function (xhr) {
+              $('#categoryModal .modal-content').html(
+                xhr.responseText || '<div class="p-3 text-danger">Unexpected error.</div>'
+              );
+              const $newForm = $('#categoryModal form[data-ajax="true"]');
+              if ($newForm.length) wireUpValidator($newForm);
+            }
+          });
         });
     </script>
-
-    <script>window.isCategoryList = true;</script>
 }

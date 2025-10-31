@@ -19,6 +19,8 @@
             <input type="hidden" asp-for="Category.CategoryId"/>
         }
 
+        <input type="hidden" name="IsModal" value="true" />
+
         <div class="mb-3">
             <div asp-validation-summary="All" class="text-danger"></div>
         </div>
@@ -58,7 +60,9 @@
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit" class="btn btn-primary">@(Model.IsCreate ? "Create" : "Save changes")</button>
+        <button type="submit" class="btn btn-primary">
+            @(Model.IsCreate ? "Create" : "Save changes")
+        </button>
     </div>
 </form>
 

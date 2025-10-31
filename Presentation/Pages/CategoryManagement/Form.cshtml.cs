@@ -85,6 +85,8 @@ namespace Presentation.Pages.CategoryManagement
                 })
                 .ToList();
 
+            Console.WriteLine(IsModal);
+
             return Page();
         }
 
@@ -109,10 +111,6 @@ namespace Presentation.Pages.CategoryManagement
             {
                 LoadLookups(Category.ParentCategoryId);
                 //ShowModal = true;
-                if (IsModal)
-                {
-                    return Partial("_FormPartial", this);
-                }
                 return Page();
             }
 
