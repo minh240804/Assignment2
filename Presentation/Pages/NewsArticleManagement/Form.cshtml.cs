@@ -68,7 +68,7 @@ namespace Presentation.Pages.NewsArticleManagement
                 Article = new Assignment2.DataAccess.Models.NewsArticle
                 {
                     CreatedById = (short)CurrentUserId,
-                    NewsStatus = false 
+                    NewsStatus = false
                 };
             }
 
@@ -87,8 +87,6 @@ namespace Presentation.Pages.NewsArticleManagement
                 Article.ModifiedDate = DateTime.Now;
 
 
-
-                // Non-staff không được publish khi tạo
                 if (!IsStaff) Article.NewsStatus = false;
 
                 _newsArticleService.Add(Article, SelectedTags ?? Array.Empty<int>());
