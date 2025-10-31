@@ -37,10 +37,12 @@ namespace Presentation.Pages.CategoryManagement
 
         private void Validate(Category c)
         {
+            //var search = _cats.
             if (string.IsNullOrWhiteSpace(c.CategoryName))
                 ModelState.AddModelError(nameof(c.CategoryName), "Name is required");
             if (c.ParentCategoryId == c.CategoryId)
                 ModelState.AddModelError(nameof(c.ParentCategoryId), "Parent cannot be itself");
+            
         }
 
         public IActionResult OnGet(short? id)
@@ -96,10 +98,21 @@ namespace Presentation.Pages.CategoryManagement
 
             Validate(Category);
 
+            var find = _cats.GetAll()
+                .FirstOrDefault(c => c.CategoryName.Equals(Category.CategoryName, StringComparison.OrdinalIgnoreCase));
+            if(find != null)
+            {
+                ModelState.AddModelError(nameof(Category.CategoryName), "Category name already exists.");
+            }
+
             if (!ModelState.IsValid)
             {
                 LoadLookups(Category.ParentCategoryId);
-
+                //ShowModal = true;
+                if (IsModal)
+                {
+                    return Partial("_FormPartial", this);
+                }
                 return Page();
             }
 
@@ -125,6 +138,7 @@ namespace Presentation.Pages.CategoryManagement
                 {
                     ModelState.AddModelError(string.Empty, result.Message);
                     LoadLookups(Category.ParentCategoryId);
+                    IsModal = true;
                     return Page();
                 }
                 //_hubContext.Clients.All.SendAsync("ReceiveCreateCategoryNotification",
@@ -137,6 +151,7 @@ namespace Presentation.Pages.CategoryManagement
 
             }
 
+            if (IsModal) return new JsonResult(new { success = true });
             return RedirectToPage("Index"); ;
         }
     }

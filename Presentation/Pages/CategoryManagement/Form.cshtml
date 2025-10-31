@@ -11,13 +11,17 @@
 </div>
 
 <form method="post" asp-page="/CategoryManagement/Form"
-      asp-page-handler="Submit" data-ajax="true">
+      data-ajax="true" id="categoryModal" novalidate>
     @Html.AntiForgeryToken()
     <div class="modal-body">
         @if (!Model.IsCreate)
         {
             <input type="hidden" asp-for="Category.CategoryId"/>
         }
+
+        <div class="mb-3">
+            <div asp-validation-summary="All" class="text-danger"></div>
+        </div>
 
         <div class="form-group mb-3">
             <label asp-for="Category.CategoryName" class="form-label"></label>

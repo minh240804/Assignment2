@@ -132,18 +132,67 @@
 </div>
 
 @section Scripts {
-    <script>
+ <script>
         function showCreateForm() {
-                $('#formModal .modal-content').load('/CategoryManagement/Form', function() {
-                    $('#formModal').modal('show');
-                });
-            }
+            $('#formModal .modal-content').load('/CategoryManagement/Form?IsModal=true', function() {
+                $('#formModal').modal('show');
+                $.validator.unobtrusive.parse('#formModal');
+            });
+        }
 
-            function showEditForm(id) {
-                $('#formModal .modal-content').load('/CategoryManagement/Form/' + id, function() {
-                    $('#formModal').modal('show');
-                });
-            }
+        function showEditForm(id) {
+            $('#formModal .modal-content').load('/CategoryManagement/Form/' + id + '?IsModal=true', function() {
+                $('#formModal').modal('show');
+                $.validator.unobtrusive.parse('#formModal');
+            });
+        }
+
+        // 🔴 AJAX Submit Handler for Modal Forms
+        $(document).on('submit', '#formModal form[data-modal="true"]', function(e) {
+            e.preventDefault();
+            const $form = $(this);
+
+            // Client-side validation
+            if (!$form.valid()) return;
+
+            // Show loading state
+            const $submitBtn = $form.find('button[type="submit"]');
+            const originalText = $submitBtn.html();
+            $submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Saving...');
+
+            $.ajax({
+                url: $form.attr('action'),
+                type: 'POST',
+                data: $form.serialize(),
+                success: function(res, status, xhr) {
+                    const ct = xhr.getResponseHeader('Content-Type') || '';
+
+                    // ✅ Success (JSON response)
+                    if (ct.includes('application/json') && res && res.success) {
+                        $('#formModal').modal('hide');
+                        location.reload(); // Reload to show updated list
+                        return;
+                    }
+
+                    // ❌ Validation Error (HTML response)
+                    $('#formModal .modal-content').html(res);
+                    $.validator.unobtrusive.parse('#formModal');
+                },
+                error: function(xhr) {
+                    const errorHtml = xhr.responseText || '<div class="p-3 text-danger">An unexpected error occurred.</div>';
+                    $('#formModal .modal-content').html(errorHtml);
+                    $.validator.unobtrusive.parse('#formModal');
+                },
+                complete: function() {
+                    $submitBtn.prop('disabled', false).html(originalText);
+                }
+            });
+        });
+
+        // Clear modal on hide
+        $('#formModal').on('hidden.bs.modal', function() {
+            $(this).find('.modal-content').html('');
+        });
     </script>
 
     <script>window.isCategoryList = true;</script>

@@ -59,10 +59,13 @@
                                     <a class="nav-link text-dark" asp-area="" asp-page="/NewsArticleManagement/Index">News Article Management</a>
                                 </li>
                             }
+                            if(role != 0)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-page="/AccountManagement/Profile">@name</a>
+                                </li>
+                            }
 
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="/AccountManagement/Profile">@name</a>
-                            </li>
 
                             <li class="nav-item">
                                 <form id="logoutForm" method="post" asp-page="/AccountManagement/Login" asp-page-handler="Logout" class="form-inline">
