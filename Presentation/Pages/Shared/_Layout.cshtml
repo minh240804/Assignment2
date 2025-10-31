@@ -42,11 +42,14 @@
                                     <a class="nav-link text-dark" asp-area="" asp-page="/AccountManagement/Index">Accounts</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" href="/TagManagerment/Index">Tag Management</a>
+                                    <a class="nav-link text-dark" asp-area="" asp-page="/TagManagement/Index">Tag Management</a>
                                 </li>
                             }
                             else if (role == 1)
                             {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-page="/TagManagement/Index">Tag Management</a>
+                                </li>
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-page="/CategoryManagement/Index">Category</a>
                                 </li>

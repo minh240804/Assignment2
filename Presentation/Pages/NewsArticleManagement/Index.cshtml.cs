@@ -55,5 +55,23 @@ namespace Presentation.Pages.NewsArticleManagement
             }
             return RedirectToPage();
         }
+        public async Task<IActionResult> OnGetMyArticles()
+        {
+           
+            var userId = _httpContextAccessor.HttpContext?.Session.GetInt32("UserId");
+            Console.WriteLine(userId);
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            Articles = _newsArticleService
+                .GetAll()
+                .Where(a => a.CreatedById == (short)userId)
+                .ToList();
+
+
+            return Page();
+        }
     }
 }

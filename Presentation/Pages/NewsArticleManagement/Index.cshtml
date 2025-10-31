@@ -84,6 +84,17 @@
 	</script>
 
 
-	<script>window.isNewsList = true;</script>
+	<script>
+		window.connection = new signalR.HubConnectionBuilder()
+			.withUrl("/notificationHub")
+			.build();
+
+		connection.start().then(() => {
+			console.log("[SR] SignalR connected.");
+		}).catch(err => console.error("[SR] SignalR error:", err));
+
+		// Biến flag dùng cho form
+		window.isNewsList = true;
+	</script>
 }
 
