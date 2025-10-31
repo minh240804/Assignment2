@@ -72,6 +72,26 @@ namespace Presentation.Hubs
 
         public Task JoinArticleGroup(string articleId)
             => Groups.AddToGroupAsync(Context.ConnectionId, $"article_{articleId}");
+        public async Task JoinDashboardGroup()
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, "admin_dashboard");
+        }
+
+        public async Task LeaveDashboardGroup()
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, "admin_dashboard");
+        }
+
+        public async Task BroadcastDashboardUpdate(string eventType, string entityType, string message)
+        {
+            await Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+            {
+                eventType = eventType, // "create", "update", "delete"
+                entityType = entityType, // "article", "account", "category", "comment"
+                message = message,
+                timestamp = DateTime.Now
+            });
+        }
 
         public Task LeaveArticleGroup(string articleId)
             => Groups.RemoveFromGroupAsync(Context.ConnectionId, $"article_{articleId}");
@@ -127,13 +147,13 @@ namespace Presentation.Hubs
         private static string BuildArticleUpdatedMsg(NewsArticle art, string updaterName)
         {
             var title = string.IsNullOrWhiteSpace(art.NewsTitle) ? (art.Headline ?? "(No title)") : art.NewsTitle;
-            return $" Article updated: {title} — by {updaterName} at {DateTime.Now:HH:mm dd/MM}.";
+            return $" Article updated: {title} � by {updaterName} at {DateTime.Now:HH:mm dd/MM}.";
         }
 
         private static string BuildArticleDeletedMsg(NewsArticle art, string actorName)
         {
             var title = string.IsNullOrWhiteSpace(art.NewsTitle) ? (art.Headline ?? "(No title)") : art.NewsTitle;
-            return $" Article deleted: {title} — by {actorName} at {DateTime.Now:HH:mm dd/MM}.";
+            return $" Article deleted: {title} � by {actorName} at {DateTime.Now:HH:mm dd/MM}.";
         }
     }
 }

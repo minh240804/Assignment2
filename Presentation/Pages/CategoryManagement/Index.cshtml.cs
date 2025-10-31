@@ -3,6 +3,8 @@ using Assignment2.DataAccess.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
+using Presentation.Hubs;
 
 
 namespace Presentation.Pages.CategoryManagement
@@ -10,10 +12,12 @@ namespace Presentation.Pages.CategoryManagement
     public class IndexModel : PageModel
     {
         private readonly ICategoryService _cats;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public IndexModel(ICategoryService cats)
+        public IndexModel(ICategoryService cats, IHubContext<NotificationHub> hubContext)
         {
             _cats = cats;
+            _hubContext = hubContext;
         }
 
         public IEnumerable<Category> Categories { get; set; }
@@ -63,17 +67,29 @@ namespace Presentation.Pages.CategoryManagement
             return Page();
         }
         
-        public IActionResult OnPostDelete(short id)
+        public async Task<IActionResult> OnPostDelete(short id)
         {
             //Console.WriteLine("delete in index");
             if (!IsStaff) return Unauthorized();
 
             try
             {
+                var category = _cats.Get(id);
+                var categoryName = category?.CategoryName ?? $"ID {id}";
+                
                 var isSuccess = _cats.Delete(id);
                 if (isSuccess)
                 {
                     SuccessMessage = "Category deleted successfully.";
+                    
+                    // Notify dashboard
+                    await _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+                    {
+                        eventType = "delete",
+                        entityType = "category",
+                        message = $"Category deleted: {categoryName}",
+                        timestamp = DateTime.Now
+                    });
                 }
                 else
                 {

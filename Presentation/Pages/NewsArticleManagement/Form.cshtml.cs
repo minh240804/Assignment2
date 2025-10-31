@@ -95,6 +95,15 @@ namespace Presentation.Pages.NewsArticleManagement
 
                 var a = _accountService.Get(Article.CreatedById.Value);
 
+                // Notify dashboard about new article
+                await _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+                {
+                    eventType = "create",
+                    entityType = "article",
+                    message = $"New article created: {Article.NewsTitle} by {a.AccountName}",
+                    timestamp = DateTime.Now
+                });
+
                 if (Article.NewsStatus)
                 {
                     await _hubContext.Clients.All.SendAsync("NewArticlePublished",
@@ -125,15 +134,32 @@ namespace Presentation.Pages.NewsArticleManagement
 
                 _newsArticleService.Update(existing, SelectedTags ?? Array.Empty<int>());
 
-
+                // Determine notification message based on publish status change
+                string eventType;
+                string message;
+                
                 if (!wasPublished && existing.NewsStatus)
                 {
-                    await _hubContext.Clients.All.SendAsync("NewArticlePublished",
-                       $"New Article Published by {existing.CreatedBy.AccountName}");
+                    // Changed from draft to published
+                    var authorName = existing.CreatedBy?.AccountName ?? "Unknown";
+                    eventType = "publish";
+                    message = $"Article published: \"{existing.NewsTitle}\" by {authorName}";
+                }
+                else
+                {
+                    // Regular update
+                    eventType = "update";
+                    message = $"Article updated: \"{existing.NewsTitle}\"";
                 }
 
-                await _hubContext.Clients.All.SendAsync("UpdateNewsArticle", Article.NewsArticleId.ToString());
-
+                // Send single notification to dashboard
+                await _hubContext.Clients.Group("admin_dashboard").SendAsync("DashboardUpdate", new
+                {
+                    eventType = eventType,
+                    entityType = "article",
+                    message = message,
+                    timestamp = DateTime.Now
+                });
 
                 TempData["SuccessMessage"] = "News updated successfully.";
             }

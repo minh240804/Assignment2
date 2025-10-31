@@ -5,16 +5,18 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">
-                    <h3>Profile</h3>
-                </div>
+                <div class="card-header"><h3>Profile</h3></div>
                 <div class="card-body">
                     @if (TempData["Success"] != null)
                     {
                         <div class="alert alert-success">@TempData["Success"]</div>
                     }
 
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
                     <form method="post">
+                        @Html.AntiForgeryToken()
+
                         <input type="hidden" asp-for="Account.AccountId" />
                         <input type="hidden" asp-for="Account.AccountEmail" />
                         <input type="hidden" asp-for="Account.AccountRole" />
@@ -30,13 +32,25 @@
                             <input asp-for="Account.AccountEmail" class="form-control" readonly />
                         </div>
 
+                        <hr />
+                        <div class="alert alert-secondary py-2">Change password (optional)</div>
+
                         <div class="form-group mb-3">
-                            <label for="NewPassword">New Password (leave blank to keep current)</label>
-                            <input type="password" id="NewPassword" name="NewPassword" class="form-control" />
-                            @if (!string.IsNullOrEmpty(Model.PasswordError))
-                            {
-                                <span class="text-danger">@Model.PasswordError</span>
-                            }
+                            <label asp-for="OldPassword">Old password</label>
+                            <input asp-for="OldPassword" type="password" class="form-control" autocomplete="current-password" />
+                            <span asp-validation-for="OldPassword" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="NewPassword">New password</label>
+                            <input asp-for="NewPassword" type="password" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="NewPassword" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="ConfirmPassword">Confirm new password</label>
+                            <input asp-for="ConfirmPassword" type="password" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                         </div>
 
                         <button type="submit" class="btn btn-primary">Update Profile</button>
@@ -48,5 +62,7 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
