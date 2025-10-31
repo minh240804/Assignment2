@@ -90,6 +90,10 @@ namespace Presentation.Pages.CategoryManagement
                         message = $"Category deleted: {categoryName}",
                         timestamp = DateTime.Now
                     });
+                    await _hubContext.Clients.All.SendAsync("ReloadCategoryList");
+
+                    await _hubContext.Clients.Group("Staff").SendAsync("ReceiveCreateCategoryNotification",
+                        $"A new category has been deleted");
                 }
                 else
                 {
