@@ -4,23 +4,26 @@
 @{
     Layout = "_Layout";
     ViewData["Title"] = "News Report";
-    var groupBy = ViewBag.GroupBy as string ?? "";
 }
 
 <h2 class="mb-4">News Report</h2>
 
+
 <form method="get" class="row g-3 mb-4">
     <div class="col-md-3">
+        <label>Start</label>
         <input type="date" name="start" value="@Model.Start" class="form-control" />
     </div>
     <div class="col-md-3">
+        <label>End</label>
         <input type="date" name="end" value="@Model.End" class="form-control" />
     </div>
     <div class="col-md-3">
+        <label>Group</label>
         <select name="groupBy" class="form-select" onchange="this.form.submit()">
             <option value="">No Grouping</option>
-            <option value="category" selected="@(groupBy == "category")">Group by Category</option>
-            <option value="author" selected="@(groupBy == "author")">Group by Author</option>
+            <option value="category" selected="@(Model.GroupBy == "category")">Group by Category</option>
+            <option value="author" selected="@(Model.GroupBy == "author")">Group by Author</option>
         </select>
     </div>
     <div class="col-md-3">
@@ -30,13 +33,15 @@
 
 // need action latter
 <div class="mb-3">
-    <a href="@Url.Page("/NewsReport", "ExportToExcel", new { start = Model.Start, end = Model.End })"
+    <a asp-page-handler="ExportToExcel"
+       asp-route-start="@Model.Start"
+       asp-route-end="@Model.End"
        class="btn btn-success">
-        Export to Excel
+        <i class="bi bi-file-earmark-excel"></i> Export to Excel
     </a>
 </div>
 
-@if (string.IsNullOrEmpty(groupBy))
+@if (string.IsNullOrEmpty(Model.GroupBy))
 {
     <!-- No Grouping - Display as table -->
     <table class="table table-bordered table-striped">
@@ -65,7 +70,7 @@
         </tbody>
     </table>
 }
-else if (groupBy == "category")
+else if (Model.GroupBy == "category")
 {
     <!-- Group by Category -->
     var grouped = Model.Articles.GroupBy(n => n.Category?.CategoryName ?? "No Category")
@@ -98,6 +103,51 @@ else if (groupBy == "category")
                                 <td>@n.NewsTitle</td>
                                 <td>@n.CreatedBy?.AccountEmail</td>
                                 <td>@n.CreatedBy?.AccountName</td>
+                                <td>@n.CreatedDate?.ToString("yyyy-MM-dd")</td>
+                                <td>@(n.NewsStatus == true ? "Active" : "Inactive")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}
+else if (Model.GroupBy == "author")
+{
+    <!-- Group by Author -->
+    var grouped = Model.Articles.GroupBy(n => new
+    {
+        Email = n.CreatedBy?.AccountEmail ?? "Unknown",
+        Name = n.CreatedBy?.AccountName ?? "Unknown Author"
+    })
+                       .OrderBy(g => g.Key.Name);
+
+    @foreach (var group in grouped)
+    {
+        <div class="card mb-3">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-person"></i> @group.Key.Name (@group.Key.Email)
+                    <span class="badge bg-light text-dark ms-2">@group.Count() article(s)</span>
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-bordered table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Created Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var n in group.OrderByDescending(x => x.CreatedDate))
+                        {
+                            <tr>
+                                <td>@n.NewsTitle</td>
+                                <td>@n.Category?.CategoryName</td>
                                 <td>@n.CreatedDate?.ToString("yyyy-MM-dd")</td>
                                 <td>@(n.NewsStatus == true ? "Active" : "Inactive")</td>
                             </tr>
