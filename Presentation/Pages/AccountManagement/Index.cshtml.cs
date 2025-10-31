@@ -28,12 +28,16 @@ namespace Presentation.Pages.AccountManagement
             var account = _acc.Get(id);
             if (account == null) return NotFound();
 
-            await _hub.Clients.All.SendAsync("AccountDeactivated", id.ToString());
-
             
-            _acc.Delete(id);
-            
-            TempData["SuccessMessage"] = "Account deleted successfully.";
+            if(_acc.Delete(id).Success == false)
+            {
+                TempData["ErrorMessage"] = "Failed to delete account.";
+            }
+            else
+            {
+                await _hub.Clients.All.SendAsync("AccountDeactivated", id.ToString());
+                TempData["SuccessMessage"] = "Account deleted successfully.";
+            }            
             return RedirectToPage();
         }
 
