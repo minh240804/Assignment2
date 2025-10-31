@@ -49,20 +49,32 @@
 									<a class="nav-link text-dark" asp-area="" asp-page="/AccountManagement/Index">Accounts</a>
 								</li>
 								<li class="nav-item">
-									<a class="nav-link text-dark" href="/TagManagerment/Index">Tag Management</a>
+									<a class="nav-link text-dark" asp-area="" asp-page="/Report/Index">Report</a>
 								</li>
 							}
 							else if (role == 1)
 							{
 								<li class="nav-item">
-									<a class="nav-link text-dark" asp-area="" asp-page="/CategoryManagement/Index">Category</a>
+									<a class="nav-link text-dark" href="/TagManagerment/Index">Tag Management</a>
 								</li>
 								<li class="nav-item">
-									<a class="nav-link text-dark" asp-area="" asp-page="/NewsArticleManagement/Index">News Article Management</a>
+									<a class="nav-link text-dark" asp-area="" asp-page="/NewsArticleManagement/Index">
+										News
+										Article Management
+									</a>
+								</li>
+								<li class="nav-item">
+									<a class="nav-link text-dark" asp-area="" asp-page="/NewsArticleManagement/MyArticle">
+										My
+										Articles
+									</a>
+								</li>
+
+								<li class="nav-item">
+									<a class="nav-link text-dark" asp-area="" asp-page="/CategoryManagement/Index">Category</a>
 								</li>
 							}
-
-							@if (role != 0)
+							if (role != 0)
 							{
 								<li class="nav-item">
 									<a class="nav-link text-dark" asp-area="" asp-page="/AccountManagement/Profile">@name</a>
@@ -71,8 +83,12 @@
 
 
 							<li class="nav-item">
-								<form id="logoutForm" method="post" asp-page="/AccountManagement/Login" asp-page-handler="Logout" class="form-inline">
-									<button id="logoutBtn" type="submit" class="btn btn-link nav-link text-dark">Logout</button>
+								<form id="logoutForm" method="post" asp-page="/AccountManagement/Login"
+									  asp-page-handler="Logout" class="form-inline">
+									<button id="logoutBtn" type="submit"
+											class="btn btn-link nav-link text-dark">
+										Logout
+									</button>
 								</form>
 							</li>
 						}
