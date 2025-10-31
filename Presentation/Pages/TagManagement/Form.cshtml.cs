@@ -104,6 +104,8 @@ namespace Presentation.Pages.TagManagement
                 }
 
                 return new JsonResult(new { success = true });
+                //if (success = true)
+                //return RedirectToPage("Index");
             }
             catch (Exception ex)
             {

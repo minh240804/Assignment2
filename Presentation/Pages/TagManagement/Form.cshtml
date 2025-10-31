@@ -39,23 +39,25 @@
 <script>
     $(document).ready(function () {
         $('#tagForm').on('submit', function (e) {
-            e.preventDefault(); // ✅ Chặn chuyển trang
+            e.preventDefault(); 
 
             $.ajax({
                 url: '@Url.Page("/TagManagement/Form")',
                 type: 'POST',
                 data: $(this).serialize(),
-                success: function (res) {
-                    if (res.success) {
-                        $('#formModal').modal('hide');
-                        location.reload();
-                    } else {
-                        toastr.error("Save failed. Please try again.");
-                    }
-                },
-                error: function () {
-                    toastr.error("An unexpected error occurred.");
-                }
+                    success: function (res) {
+        if (res.success) {
+            const modalEl = document.getElementById('formModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide(); // ✅ Đóng modal đúng cách
+
+            //toastr.success("Saved successfully!");
+            setTimeout(() => location.reload(), 500);
+        } else {
+            toastr.error("Save failed. Please try again.");
+        }
+    },
+
             });
         });
     });
