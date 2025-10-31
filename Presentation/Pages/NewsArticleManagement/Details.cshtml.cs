@@ -14,17 +14,20 @@ namespace Presentation.Pages.NewsArticleManagement
         private readonly IArticleCommentService _commentService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IArticleRecommendationService _recommendationService;
 
         public DetailsModel(
             INewsArticleService newsArticleService,
             IArticleCommentService commentService,
             IHttpContextAccessor httpContextAccessor,
-            IHubContext<NotificationHub> hubContext)
+            IHubContext<NotificationHub> hubContext,
+            IArticleRecommendationService recommendationService)
         {
             _newsArticleService = newsArticleService;
             _commentService = commentService;
             _httpContextAccessor = httpContextAccessor;
             _hubContext = hubContext;
+            _recommendationService = recommendationService;
         }
 
         public NewsArticle? Article { get; set; }
@@ -49,10 +52,19 @@ namespace Presentation.Pages.NewsArticleManagement
                 return NotFound();
             }
 
-            // Get related articles
-            RelatedArticles = _newsArticleService
-                .GetRelatedArticles(id, Article.CategoryId, 3)
-                .ToList();
+            // Get AI-powered related articles based on content similarity
+            try
+            {
+                RelatedArticles = _recommendationService.GetSimilarArticles(id, 3);
+            }
+            catch (Exception ex)
+            {
+                // Fallback to basic category/tag matching if AI fails
+                Console.WriteLine($"AI recommendation failed: {ex.Message}. Using fallback.");
+                RelatedArticles = _newsArticleService
+                    .GetRelatedArticles(id, Article.CategoryId, 3)
+                    .ToList();
+            }
 
             // Load comments from database
             Comments = _commentService.GetByArticle(id).ToList();

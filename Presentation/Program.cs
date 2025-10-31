@@ -56,6 +56,14 @@ namespace Assignment2
             builder.Services.AddScoped<ITagService, TagService>();
             builder.Services.AddScoped<IArticleCommentService, ArticleCommentService>();
 
+            // Register AI Recommendation Service (Scoped to work with scoped repositories)
+            builder.Services.AddScoped<IArticleRecommendationService>(sp =>
+            {
+                var articleRepo = sp.GetRequiredService<INewsArticleRepository>();
+                var modelPath = Path.Combine(builder.Environment.WebRootPath, "models", "ArticleSuggestionModel.zip");
+                return new ArticleRecommendationService(articleRepo, modelPath);
+            });
+
             // Configure Session
             builder.Services.AddDistributedMemoryCache();
             builder.Services.AddSession(options =>
