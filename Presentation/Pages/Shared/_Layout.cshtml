@@ -2,6 +2,7 @@
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,13 +17,14 @@
 
     @await RenderSectionAsync("Styles", required: false)
 </head>
+
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container">
                 <a class="navbar-brand" asp-area="" asp-page="/Index">Assignment2</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
@@ -46,20 +48,22 @@
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-page="/Report/Index">Reports</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" href="/TagManagerment/Index">Tag Management</a>
-                                </li>
+
                             }
                             else if (role == 1)
                             {
                                 <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-page="/TagManagement/Index">Tag Management</a>
+                                </li>
+                                <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-page="/CategoryManagement/Index">Category</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-page="/NewsArticleManagement/Index">News Article Management</a>
+                                    <a class="nav-link text-dark" asp-area="" asp-page="/NewsArticleManagement/Index">News
+                                        Article Management</a>
                                 </li>
                             }
-                            if(role != 0)
+                            if (role != 0)
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-page="/AccountManagement/Profile">@name</a>
@@ -68,8 +72,10 @@
 
 
                             <li class="nav-item">
-                                <form id="logoutForm" method="post" asp-page="/AccountManagement/Login" asp-page-handler="Logout" class="form-inline">
-                                    <button id="logoutBtn" type="submit" class="btn btn-link nav-link text-dark">Logout</button>
+                                <form id="logoutForm" method="post" asp-page="/AccountManagement/Login"
+                                    asp-page-handler="Logout" class="form-inline">
+                                    <button id="logoutBtn" type="submit"
+                                        class="btn btn-link nav-link text-dark">Logout</button>
                                 </form>
                             </li>
                         }
@@ -116,7 +122,7 @@
     <script src="~/js/accountNotifications.js" asp-append-version="true"></script>
 
     <script>
-        window.userRole = @(role ?? -1); 
+        window.userRole = @(role ?? -1);
         window.currentAccountId = @(HttpContextAccessor.HttpContext?.Session.GetInt32("AccountId") ?? -1);
 
         console.log("[SR] Globals -> role:", window.userRole, "accountId:", window.currentAccountId);
@@ -131,7 +137,7 @@
 
         (function wireLogoutInterceptor() {
             const logoutForm = document.getElementById('logoutForm');
-            const logoutBtn  = document.getElementById('logoutBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
             if (!logoutForm || !logoutBtn) {
                 console.log("[SR] Logout form not found.");
                 return;
@@ -139,7 +145,7 @@
             logoutBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 (async () => {
-                    await unregisterRoleThenStop(); 
+                    await unregisterRoleThenStop();
                     logoutForm.submit();
                 })();
             });
@@ -148,4 +154,5 @@
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>

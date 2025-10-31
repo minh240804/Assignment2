@@ -109,7 +109,17 @@ namespace Presentation.Hubs
         public Task NotifyArticleDeleted(string articleId, string title)
             => Clients.Groups(Group_Admin, Group_Staff, Group_Lecturer)
                       .SendAsync("ArticleDeleted", articleId, title);
+        public Task TagCreated(string articleId, string title, string note)
+            => Clients.Groups(Group_Admin, Group_Staff, Group_Lecturer)
+                      .SendAsync("TagCreated", title);
 
+        public Task TagDeleted(string articleId, string title)
+            => Clients.Groups(Group_Admin, Group_Staff, Group_Lecturer)
+                      .SendAsync("TagDeleted", articleId, title);
+
+        public Task TagUpdated(string articleId, string title, string note)
+            => Clients.Groups(Group_Admin, Group_Staff, Group_Lecturer)
+                      .SendAsync("TagUpdated", title);
         public Task UpdateDashboardCounts()
             => Clients.Group(Group_Admin).SendAsync("UpdateDashboardCounts");
 

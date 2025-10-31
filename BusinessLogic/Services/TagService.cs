@@ -2,7 +2,8 @@
 using System.Linq;
 using Assignment2.DataAccess.Models;
 using Assignment2.DataAccess.Repositories;
-
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
 namespace Assignment2.BusinessLogic
 {
     public class TagService : ITagService
@@ -20,9 +21,12 @@ namespace Assignment2.BusinessLogic
         public Tag? Get(int id)
             => _repo.Get(id);
 
-        public void Add(Tag tag)
+        public async Task Add(Tag tag)
         {
+            // ... (Logic kiểm tra trùng tên) ...
             _repo.Add(tag);
+        //    await _hubContext.Clients.All.SendAsync("ReceiveTagListUpdate");
+        //    await _hubContext.Clients.All.SendAsync("TagCreated", new { tagId = tag.TagId, tagName = tag.TagName });
         }
 
         public (bool Success, string Message) Update(Tag tag)
